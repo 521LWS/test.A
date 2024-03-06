@@ -29,7 +29,7 @@ git stash pop
 git add git初始设置.R
 
 ...............................................................................
-#删除历史记录
+#删除历史记录方法1
 #切换分支：
 git checkout --orphan latest_branch
 #添加到暂存区：
@@ -48,7 +48,7 @@ git stash
 git pull origin main --allow-unrelated-histories
 git stash pop
 ...........................................................................
-#删除历史记录
+#删除历史记录方法2
 #切换分支：
 git checkout --orphan latest_branch
 #添加到暂存区：
@@ -74,8 +74,19 @@ git branch -D master #删除本地分支 （D 强制）
 .......................................................
 #唤醒自动merge
 git pull origin main --allow-unrelated-histories
+
 git push -u origin main
 git push -u origin main
 git push -u origin main
 git push -u origin main
+
 git config --global --list
+#重启软件后再来一遍
+git push -u origin main
+git push -u origin main
+git push -u origin main
+git push -u origin main
+
+git config --global --list
+#可能与push次数有关，重复一定程度即可，默认的全局设置似乎都是支持快速merge的
+。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。
