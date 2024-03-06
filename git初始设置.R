@@ -73,6 +73,7 @@ git push -u origin main
 git branch -D master #删除本地分支 （D 强制）
 .......................................................
 #唤醒自动merge
+git pull origin main --allow-unrelated-histories
 git push -u origin main
 git push -u origin main
 git push -u origin main
@@ -80,3 +81,5 @@ git push -u origin main
 git push -u origin main
 git push -u origin main
 git config --global --list
+
+
