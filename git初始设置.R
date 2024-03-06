@@ -77,8 +77,12 @@ git pull origin main --allow-unrelated-histories
 git push -u origin main
 git push -u origin main
 git push -u origin main
-git push -u origin main
-git push -u origin main
+
 git push -u origin main
 git config --global --list
+
+
+
+
+
 
