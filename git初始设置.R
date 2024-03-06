@@ -19,6 +19,7 @@ git stash
 git pull origin main --allow-unrelated-histories
 git stash pop
 git add git初始设置.R
+
 ..................................................................
 #删除历史记录
 #切换分支：
@@ -34,5 +35,6 @@ git branch -m main
 #强制提交到远程仓库：
 git push -f origin main 
 ......................................................................
+
 
 
