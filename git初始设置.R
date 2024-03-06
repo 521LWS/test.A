@@ -20,6 +20,3 @@ git pull origin main --allow-unrelated-histories
 git stash pop
 
 git add git初始设置.R
-
-
-
