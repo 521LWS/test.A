@@ -82,3 +82,10 @@ git push -u origin main
 git push -u origin main
 git config --global --list
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+
+=======
+>>>>>>> 6247fa2c71dcfa5615cc2788c77ad93e35ca3a39
+>>>>>>> 6c8eaa69ed202b6b19a75c72d6be18a5c31740ad
