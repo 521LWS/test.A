@@ -22,8 +22,9 @@ new.name <- gsub("(?<=20[12][0-9][0-1][0-9][0-9]{2}) (?=[0-9]{2} 时)", "_", new
 new.name <- gsub("(?<=[0-9]{2}) 时 (?=[0-9]{2} 分)", "h", new.name, perl=TRUE)
 
 # 将 "分" 替换为 "m"，根据情况添加后缀
+new.name<-gsub("(?<=[0-9]{2}) 分(?=_)", "m", new.name, perl=TRUE); #自动曝光
 new.name <- gsub("(?<=[0-9]{2}) 分(?= *[0-9])", "m_Man_", new.name, perl=TRUE) # 手动曝光
-new.name <- gsub("(.*m_Man_)( *)([0-9.]+)(.*)(.scn)", "\\1\\3sec\\5", new.name, perl=TRUE) # 手动曝光
+
 new.name <- gsub("(?<=[0-9]{2}) 分 *[wW] *(?=.scn)", "m_w", new.name, perl=TRUE) # 白光
 new.name <- gsub("(?<=[0-9]{2}) 分 *(?=.scn)", "m", new.name, perl=TRUE) # 白光但是漏了w，我们也不臆断加w
 
