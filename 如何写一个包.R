@@ -23,5 +23,5 @@ devtools::build()
 devtools::install()
 #5. 测试：
 library(immune.rename)
-immune.rename("C:/Users/21989/Desktop/new")
+immune_rename("C:/Users/21989/Desktop/new")
 
