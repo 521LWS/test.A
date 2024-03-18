@@ -27,6 +27,7 @@ new.name <- gsub("(?<=[0-9]{2}) 分(?= *[0-9])", "m_Man_", new.name, perl=TRUE) 
 
 new.name <- gsub("(?<=[0-9]{2}) 分 *[wW] *(?=.scn)", "m_w", new.name, perl=TRUE) # 白光
 new.name <- gsub("(?<=[0-9]{2}) 分 *(?=.scn)", "m", new.name, perl=TRUE) # 白光但是漏了w，我们也不臆断加w
+new.name <- gsub("(?<=[0-9]{2}) 分(\\+)?", "m\\1", new.name, perl=TRUE)
 
 # 删除 "administrator" 字段
 new.name <- gsub("administrator ", "", new.name, ignore.case=TRUE, perl=TRUE)
@@ -42,4 +43,6 @@ new.name3 <- gsub("(.*/)([^ /]+)( )([^ \\./]+)(\\.)([^ \\./]+)( )([^ /]+)(.tif|.
 
 # 重命名文件
 file.rename(all.file, new.name3)
+
+print(new.name)
 
