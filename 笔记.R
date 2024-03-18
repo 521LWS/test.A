@@ -138,68 +138,17 @@ x[c(2:5)]<-c(2:5)#已改变x
 append(x=x,99,3)#未改变x，需赋值
 x
 ............................................................
-
-
-install.packages("ctv")
-
-
-#这段代码是在R中用于检查是否已安装BiocManager包的语句。
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install("WGCNA", dependencies = TRUE)
-BiocManager::install("GEOquery")
-BiocManager::install("limma")
-BiocManager::install("affy")
-BiocManager::install("tinyarray",dependencies = TRUE)
-install.packages("WGCNA",dependencies = TRUE)
-install.packages("tinyarray",dependencies = TRUE)
-BiocManager::install("clusterProfiler")
-install.packages("ComplexHeatmap")
-install.packages("org.Rn.eg.db")
-
-install.packages("AnnoProbe",dependencies = TRUE)
-
-
-library("WGCNA")
-library(tibble)
-library("tinyarray")
-library(stringr)
-library(data.table)
-library(AnnoProbe)
-library(GEOquery)
-
-  ost1 <geo_download("GSE35958")
-  ost1_exp <ostlSexp
-  ost1 pd <-ost1spd
-  ost1_exp <log2(ost1_exp+1)
-  find_anno("GPL570",insta11=T)P首选id转旋包
-  library(hgu133plus2.db)
-  ids_570 <-toTable(hgu133plus2SYMBOL)
-  ost1_exp <trans_array(ost1_exp,ids_570)
-  group <-ifelse(str_detect(ost1_pdstitle,"ost"),"ost","con")
-  broup <as.factor(group)
-  ids <-as.data.frame(ids_570Ssymbol)
-  idsSv2 <-ids_570Ssymbol
-  DEGS <get_deg_all(
-    ost1_exp,
-    group,
-    ids.
-    logFC_cutoff 2,
-    pvalue_cutoff =0.05,
-    adjust =T,
-    entriz F,
-    scale_before FALSE,
-    n_cutoff 3,
-    cluster_cols TRUE,
-    annotation_legend FALSE,
-    show_rownames FALSE,
-    legend FALSE,
-    lab NA,
-    pkg 4,
-    symmetry FALSE,
-    heat_union TRUE,
-    heat_id =1,
-    gene_number =200,
-    color_volcano c("#2874C5","grey","#f87669")
-    PEGSSplots
-   
+geo初解
+#移除环境文件
+rm(ids_570)
+rm(list = ls())  # 删除所有对象
+# 将表达数据中的Probe ID转换为符号（symbol）
+geo$exp <- trans_array(geo$exp, ids_570)
+# 提取符号（symbol）
+# 当您需要处理和分析结构化数据，并且需要进行各种数据操作和统计分析时，
+# 数据框是一个非常有用的数据结构。
+ids <- as.data.frame(ids_570$SYMBOL)
+# 当您需要存储和处理单一类型的一维数据集合，
+# 并且进行数学运算、索引、切片、循环迭代等操作时，向量是一个非常有用的数据结构。
+ids_v2 <- ids_570$SYMBOL
+............................................................

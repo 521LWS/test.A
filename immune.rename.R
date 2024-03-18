@@ -40,6 +40,6 @@ recursive_rename <- function(folder_path) {
 }
 # 调用递归函数开始处理
 recursive_rename("C:/Users/21989/Desktop/new")
-
+print(new_name)
 
 
