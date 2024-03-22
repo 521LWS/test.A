@@ -30,11 +30,12 @@ search()
 detach("package:Rcpp", unload = TRUE)
 
 #清除缓存
-
+rm(ids_570)
+rm(list = ls())  # 删除所有对象
 remove.packages("Rcpp")
-install.packages("languageserver", clean = TRUE)
+
 #重新安装
-install.packages("languageserver", repos=NULL, type="source")
+install.packages("languageserver", clean = TRUE, repos=NULL, type="source")
 
 #出现错误时停止后续所有运行并给你选项来试图恢复
 options(error = recover)
@@ -140,15 +141,34 @@ x
 ............................................................
 geo初解
 #移除环境文件
-rm(ids_570)
-rm(list = ls())  # 删除所有对象
+rm(ids, ids_570, geo_pd, geo_exp, fit, fit2, df, data, merged_data,probe_annotation,genes_expr,geo,exp,exp_exp,ensembl,averaged_data,contrast.matrix,DEG,DEGS)
+
+rm(list = ls())  #删除所有对象
 # 将表达数据中的Probe ID转换为符号（symbol）
 geo$exp <- trans_array(geo$exp, ids_570)
-# 提取符号（symbol）
+# 提取符号（symbol），注意symbol大小写
 # 当您需要处理和分析结构化数据，并且需要进行各种数据操作和统计分析时，
-# 数据框是一个非常有用的数据结构。
-ids <- as.data.frame(ids_570$SYMBOL)
+# 创建一个新的数据框ids，只包含SYMBOL列的数据，并去除重复值
+str(ids_570)
+head(ids_570$symbol)
+ids <- as.data.frame(ids_570$symbol)
 # 当您需要存储和处理单一类型的一维数据集合，
 # 并且进行数学运算、索引、切片、循环迭代等操作时，向量是一个非常有用的数据结构。
-ids_v2 <- ids_570$SYMBOL
-............................................................
+ids_v2 <- ids_570$symbol
+??sink
+??gsub
+#正则替换，*+？{2,6}指数量，[a-z][az]列举字符，^指开头$结尾，\b设置边界，\dD数字\wW字母\sS其他键盘符,R中似乎用双杠
+#.换行符外的任意字符，   |或，与小括号搭配，<.+> <.+?>判断括号时的长匹配与短匹配，少用
+#（）用来分隔为不同部分并从左到右编号，"\\1_\\1_"将编号重组并添加需要的连接符，
+gsub("([ab])", "\\1_\\1_", "abc and ABC")
+#\\(用来代表真括号，.*常连用，下边用来提取括号里的内容(gsub替换只能替换成一个值不能是数列，也就是说前二个位置只能是字符，当第一个位置代表全名时gsub作用相当于提取)
+#gsub：基本功能：替换，附加功能：提取，高级功能：前置判断（可用于避免对同一文件重复进行命名）
+a <- gsub(".*\\((.*)\\).tif", "\\1", "001-001-blue(300ms).tif")
+#编辑分组文字
+group_list$group <-stringr:str_remove(group_listSgroup,"tissue type:")
+# 如果不是数据框，则尝试将其转换为数据框类型
+exp <- as.data.frame(exp)
+# 将结果转换为 tibble 格式(行名入表命名为gene)
+DEG <- tibble::rownames_to_column(DEG, var = "Gene")
+
+.............................................

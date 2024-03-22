@@ -2,10 +2,10 @@ setwd("D:\\Temp")
 
 # 获取所有以 .scn 结尾的文件
 all.file <- list.files(pattern="\\.scn", include.dirs=TRUE, recursive=TRUE, full.names=FALSE)
-
+print(all.file)
 # 保存旧文件名
 old.name <- all.file
-
+print(old.name)
 # 替换 "总" 为 "t-"
 new.name <- gsub(pattern="总", replacement="t-", old.name, ignore.case=TRUE)
 
@@ -40,9 +40,9 @@ new.name2 <- gsub("(.*)(/)(.*)(/)(\\(20[123][0-9][0-9]{4}[\\_0-9a-zA-Z\\.\\- \\+
 
 # 连接日期和 gel，分开 gel 和 antibody
 new.name3 <- gsub("(.*/)([^ /]+)( )([^ \\./]+)(\\.)([^ \\./]+)( )([^ /]+)(.tif|.scn)","\\1\\2_\\4 \\6\\7\\8\\9", new.name2, perl=TRUE)
-
+print(new.name3)
 # 重命名文件
 file.rename(all.file, new.name3)
 
 print(new.name)
-
+??file.rename

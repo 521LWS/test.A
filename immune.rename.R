@@ -24,7 +24,7 @@ rename_files <- function(folder_path) {
 }
 
 # 递归函数获取所有子文件夹并运行文件重命名函数
-recursive_rename <- function(folder_path) {
+immune.rename <- function(folder_path) {
   # 获取当前文件夹下的所有子文件夹
   subdirs <- list.dirs(folder_path, recursive = FALSE)
   
@@ -34,12 +34,14 @@ recursive_rename <- function(folder_path) {
   } else {
     # 否则，对每个子文件夹递归调用该函数
     for (subdir in subdirs) {
-      recursive_rename(subdir)
+      immune.rename(subdir)
     }
   }
 }
 # 调用递归函数开始处理
-recursive_rename("C:/Users/21989/Desktop/new")
+immune.rename("C:/Users/21989/Desktop/new")
 print(new_name)
-
+...........................................................................
+library("immune.rename")
+immune_rename("C:/Users/21989/Desktop/new")
 
