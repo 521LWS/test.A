@@ -27,25 +27,20 @@ library(GEOquery)
 library(plyr)
 
 
-getoption('timeout')
-options(timeout=100000)
-# 下载并读取GEO数据集GSE35958
-
-
 
 gse = "GSE35958"
+
 geo = geo_download(gse,destdir=tempdir())
 dim(geo$exp)
 max(geo$exp)
 # 根据max(geo$exp)的大小对表达数据进行log2转换（根据情况选择）
 if(max(geo$exp)>50){#判断是否已经经过1og2转化
-  geo$exp <- log2(geo$exp + 1)#表达矩阵行1og2+1归一化处理
+  geo$exp <- log2(geo$exp + 1)}#表达矩阵行1og2+1归一化处理
 # 在Bioconductor中查找并加载GPL注释信息
 checkGPL(geo$gpl)
 printGPLInfo(geo$gpl)
 find_anno(geo$gpl)
 ids_570<- AnnoProbe::idmap(geo$gpl,destdir = tempdir())
-ids <- as.data.frame(ids_570$SYMBOL)
 
 
 
@@ -75,11 +70,12 @@ DEGS  <-  get_deg_all(
   species = "human"
 )
 # 生成差异表达基因的图像
+
+#如果执行 pdf() 函数后输出的 PDF 文件是空的，可能是因为在调用 pdf() 函数之后没有进行任何绘图操作，或者绘图操作没有被保存到 PDF 文件中。
+pdf(paste0("gse","-volcano.pdf"),onefile=FALSE)#输出文件
 DEGS$plots
-
-
-
-
+dev.off()
+write.csv(geo$exp,paste0(geo$exp,"_results.csv"))
 
 
 
@@ -101,16 +97,17 @@ geo_exp <- tibble::rownames_to_column(geo_exp, var = "Gene")
 geo_exp <- merge(ids_570, geo_exp, by.x = "probe_id",by.y ="Gene")
 # 按基因符号计算平均表达量
 geo_exp <- ddply(geo_exp, .(symbol), function(x) colMeans(x[, 3:ncol(x)]))
-
+# 将第一列转换为行名
+rownames(geo_exp)<- geo_exp$symbol
+# 删除原始的ID列
+geo_exp <- geo_exp[, -1]
 
 
 # 分组：提取第一列并新建group_list.总体不如group <- ifelse(str_detect(geo$pd$title, "ost"), "ost", "con")# group 变量将被转换为一个因子，并且可以在后续的数据分析中使用group <- factor(group)
 group_list=geo_pd [1]
 colnames(group_list)="group"
 # 三种文字编辑方式根据需要选择，其实不如上面的判断句来的好用
-group_list$group <- stringr::str_remove(group_list$group, "hMSC")
 group_list$group <- str_replace(group_list$group, ".*-(.*?)_.*", "\\1")
-group_list$group <- str_extract(group_list$group, ".*-(.*?)_")
 #group_list <- group_list[colnames(geo_exp),]：这种写法中，逗号 , 前面的部分指定了要选择的行，而逗号后面的部分为空，这意味着你选择了所有的列。这样做会保留 group_list 中与 geo_exp 中列名相匹配的行，并且保留所有的列。
 #group_list <- group_list[colnames(geo_exp)]：这种写法中，逗号后面的部分被省略了，这意味着你只选择了列，而没有选择行。这样做会保留 group_list 中与 geo_exp 中列名相匹配的列，并且保留所有的行。
 #总之，区别在于逗号后面是否带有空值，决定了你是选择了行还是列。其实这个函数意义不大，更严谨。
@@ -147,6 +144,7 @@ DEG <- tibble::rownames_to_column(DEG, var = "Gene")
 # 整理并重命名
 df<-DEG[c(1,2,5)]
 colnames(df)<-c("Gene","10g2FC","pvalue")
+
 
 
 

@@ -75,7 +75,7 @@ git stash pop
 #help
 help(package=ggplot2)
 ??ggplot2
-help.search ("BiocManager")
+help.search ("volcano")
 
 av <- available.packages()
 filtered_pkgs <- av[grep("WGCNA", av[, "Package"]), ]
@@ -147,16 +147,15 @@ rm(list = ls())  #删除所有对象
 # 将表达数据中的Probe ID转换为符号（symbol）
 geo$exp <- trans_array(geo$exp, ids_570)
 # 提取符号（symbol），注意symbol大小写
-# 当您需要处理和分析结构化数据，并且需要进行各种数据操作和统计分析时，
+# 当您需要处理和分析结构化数据，并且需要进行各种数据操作和统计分析时
 # 创建一个新的数据框ids，只包含SYMBOL列的数据，并去除重复值
-str(ids_570)
 head(ids_570$symbol)
+str(ids_570)
 ids <- as.data.frame(ids_570$symbol)
 # 当您需要存储和处理单一类型的一维数据集合，
 # 并且进行数学运算、索引、切片、循环迭代等操作时，向量是一个非常有用的数据结构。
 ids_v2 <- ids_570$symbol
-??sink
-??gsub
+
 #正则替换，*+？{2,6}指数量，[a-z][az]列举字符，^指开头$结尾，\b设置边界，\dD数字\wW字母\sS其他键盘符,R中似乎用双杠
 #.换行符外的任意字符，   |或，与小括号搭配，<.+> <.+?>判断括号时的长匹配与短匹配，少用
 #（）用来分隔为不同部分并从左到右编号，"\\1_\\1_"将编号重组并添加需要的连接符，
@@ -166,9 +165,38 @@ gsub("([ab])", "\\1_\\1_", "abc and ABC")
 a <- gsub(".*\\((.*)\\).tif", "\\1", "001-001-blue(300ms).tif")
 #编辑分组文字
 group_list$group <-stringr:str_remove(group_listSgroup,"tissue type:")
+# 三种文字编辑方式根据需要选择，其实不如上面的判断句来的好用
+group_list$group <- stringr::str_remove(group_list$group, "hMSC")
+group_list$group <- str_replace(group_list$group, ".*-(.*?)_.*", "\\1")
+group_list$group <- str_extract(group_list$group, ".*-(.*?)_")
 # 如果不是数据框，则尝试将其转换为数据框类型
 exp <- as.data.frame(exp)
 # 将结果转换为 tibble 格式(行名入表命名为gene)
 DEG <- tibble::rownames_to_column(DEG, var = "Gene")
-
+# 将第一列转换为行名
+rownames(geo_exp)<- geo_exp$symbol
+# 删除原始的ID列
+geo_exp <- geo_exp[, -1]
+#如果执行 pdf() 函数后输出的 PDF 文件是空的，可能是因为在调用 pdf() 函数之后没有进行任何绘图操作，或者绘图操作没有被保存到 PDF 文件中。
+pdf(paste0("gse","-volcano.pdf"),onefile=FALSE)#输出文件
+DEGS$plots
+dev.off()
 .............................................
+#对别人的代码进行更改，记住一定要检查的失误：
+参数没有全替换，参数替换了却没有运行赋值，参数大小写失误
+。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。
+# TCGA
+
+# 加载所需的包
+library(data.table)
+library(tinyarray)
+#数据清洗：data_cleaning.R文件
+source("data_cleaning.R")
+cleaned_data <- clean_data(counts)
+# 从文件中读取LUAD数据并转换为数据框
+LUAD <- fread("TCGA-LUAD.htseq_counts.tsv.gz")
+LUAD <- as.data.frame(LUAD)
+# 将行名称设置为LUADSEnsemb1_ID列中的值，为了方便其他包处理
+row.names(LUAD) <- LUADSEnsemb1_ID
+# 去除第一列（假设第一列是行索引）
+LUAD <- LUAD[, -1]
