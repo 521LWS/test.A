@@ -94,10 +94,10 @@ BiocManager::install("WGCNA",dependencies = TRUE)
 #强制安装
 BiocManager::install("WGCNA", dependencies = TRUE, force = TRUE)
 BiocManager::install("GO.db")
-#从github安装
+#从github安装,这个一般少用，因为必须知道包来源于谁，比如GO.db来源于Bioconductor
 install.packages("devtools")
 devtools::install_github("Bioconductor/GO.db")
-
+#当显示没有权限安装和移动包时，最合适的方法就是清除ENVIRONMENT,重启并手动update包后再安装
 
 
 # 定义要卸载的包名称
@@ -139,12 +139,77 @@ x[c(2:5)]<-c(2:5)#已改变x
 append(x=x,99,3)#未改变x，需赋值
 x
 ............................................................
-geo初解
-#移除环境文件
+数据处理分析
+#1.移除环境文件
 rm(ids, ids_570, geo_pd, geo_exp, fit, fit2, df, data, merged_data,probe_annotation,genes_expr,geo,exp,exp_exp,ensembl,averaged_data,contrast.matrix,DEG,DEGS)
-
 rm(list = ls())  #删除所有对象
-# 将表达数据中的Probe ID转换为符号（symbol）
+# 2. 交换第一行和第二行的顺序
+tableB <- tableB[c(2, 1), ]
+# 获取表B的行索引
+row_indices <- match(rownames(tableB), rownames(tableA))
+# 根据表B的行索引对表A的行进行排序
+tableA_sorted <- tableA[row_indices, ]
+
+# 4.将结果转换为 tibble 格式(行名入表命名为gene)
+DEG <- tibble::rownames_to_column(DEG, var = "Gene")
+# 将第一列转换为行名，为了方便其他包处理
+rownames(geo_exp)<- geo_exp$symbol
+# 删除原始的ID列
+geo_exp <- geo_exp[, -1]
+# 6. 储存表格(更建议第一种方便调用)
+saveRDS(clinical,file = paste0(project,"_clinical.rds"))
+write.csv(geo$exp,paste0(gse,"_results.csv"))
+
+# 7.输出图片
+pdf(paste0("gse","-volcano.pdf"),onefile=FALSE)
+DEGS$plots
+dev.off()
+# 8. 查找(切记先进行WGCNA_matrix<-as.data.frame(WGCNA_matrix))
+##转置
+WGCNA_matrix <- t(WGCNA_matrix)
+#根据关键词提取必要的列
+selected_columns <- WGCNA_matrix[, grepl("LEP", names(WGCNA_matrix), ignore.case = TRUE)]
+keyword <- c("Patient_ID", "Age", "Sex", "gender","Disease_Status","diagno")
+selected_columns <- clinical_data[, grepl(paste(keyword, collapse = "|"), names(clinical_data), ignore.case = TRUE)]
+# 将疾病状态转换为数值标量（包含Healthy或者是无效值）
+selected_columns$Disease_Status <- ifelse(grepl("Healthy", selected_columns$Disease_Status, ignore.case = TRUE) | is.na(selected_columns$Disease_Status), 0, 1)
+# 对比两列数据异同
+diff_data <- query$submitter_id[!(query$submitter_id %in% clinical$bcr_patient_barcode)]
+#找到某一列的某个数值所在的一行
+# 使用逻辑索引筛选数据
+result <- query[query$submitter_id == "TCGA-5M-AAT5", ]
+# 在列名中查找包含"LEP"的列
+if ("LEP" %in% colnames(WGCNA_matrix)) {
+  print("LEP 列存在于 WGCNA_matrix 中。")
+} else {
+  print("LEP 列不存在于 WGCNA_matrix 中。")
+}
+selected_columns <- WGCNA_matrix[c("A1BG", "LEP")]
+
+
+
+# 9..载入
+load("TCGA-COAD_RNA.Rdata")
+#使用read.csv()函数载入CSV文件
+data <- read.csv("your_file.csv", header = TRUE)
+# 读取以制表符分隔的文本文件
+data <- read.delim("file.txt", header = TRUE)
+# 以TXT格式读取基因表达数据
+data <- read.table(file_path, header = TRUE, sep = "\t")
+# 运行已储存模块
+source("data_cleaning.R")
+# 10.重提取重命名列
+gene_expression_data <- read.table("gene_expression_data.txt", header = TRUE)
+df<-DEG[c(1,2,5)]
+colnames(df)<-c("Gene","10g2FC","pvalue")
+#转置
+WGCNA_matrix <- t(fpkm)
+
+
+
+............................................................
+geo初解
+# 将表达数据中的Probe ID转换为符号（symbol）此方法随机删除，不可取，仅参考
 geo$exp <- trans_array(geo$exp, ids_570)
 # 提取符号（symbol），注意symbol大小写
 # 当您需要处理和分析结构化数据，并且需要进行各种数据操作和统计分析时
@@ -171,12 +236,6 @@ group_list$group <- str_replace(group_list$group, ".*-(.*?)_.*", "\\1")
 group_list$group <- str_extract(group_list$group, ".*-(.*?)_")
 # 如果不是数据框，则尝试将其转换为数据框类型
 exp <- as.data.frame(exp)
-# 将结果转换为 tibble 格式(行名入表命名为gene)
-DEG <- tibble::rownames_to_column(DEG, var = "Gene")
-# 将第一列转换为行名
-rownames(geo_exp)<- geo_exp$symbol
-# 删除原始的ID列
-geo_exp <- geo_exp[, -1]
 #如果执行 pdf() 函数后输出的 PDF 文件是空的，可能是因为在调用 pdf() 函数之后没有进行任何绘图操作，或者绘图操作没有被保存到 PDF 文件中。
 pdf(paste0("gse","-volcano.pdf"),onefile=FALSE)#输出文件
 DEGS$plots
@@ -196,7 +255,10 @@ cleaned_data <- clean_data(counts)
 # 从文件中读取LUAD数据并转换为数据框
 LUAD <- fread("TCGA-LUAD.htseq_counts.tsv.gz")
 LUAD <- as.data.frame(LUAD)
-# 将行名称设置为LUADSEnsemb1_ID列中的值，为了方便其他包处理
-row.names(LUAD) <- LUADSEnsemb1_ID
-# 去除第一列（假设第一列是行索引）
-LUAD <- LUAD[, -1]
+# 将mRNA表达数据的行名称转换为数据框形式
+ids_m <- as.data.frame(rownames(counts_m))
+ids_m <-ids_m [c(1,1)]
+。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。。
+#WGCNA
+source("标量化geo临床信息.R")
+processed_pd <- process_clinical_data(geo$pd)
