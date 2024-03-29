@@ -1,4 +1,6 @@
 process_geo <- function(geo_data) {
+  library("tinyarray")
+  library(AnnoProbe)
   library(plyr)
   # 检查并打印GPL信息
   checkGPL(geo_data$gpl)

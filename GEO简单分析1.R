@@ -5,14 +5,29 @@ options(stringsAsFactors = F)
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 # 使用BiocManager安装所需的Bioconductor包
-BiocManager::install("plyr")
-BiocManager::install("WGCNA", dependencies = TRUE)
-BiocManager::install("GEOquery")
-BiocManager::install("limma")
-BiocManager::install("affy")
-BiocManager::install("tinyarray", dependencies = TRUE)
-BiocManager::install("clusterProfiler")
-BiocManager::install("ComplexHeatmap")
+if (!requireNamespace("plyr", quietly = TRUE)) 
+  BiocManager::install("plyr",dependencies = TRUE)
+if (!requireNamespace("WGCNA", quietly = TRUE)) 
+  BiocManager::install("WGCNA",dependencies = TRUE)
+if (!requireNamespace("GEOquery", quietly = TRUE)) 
+  BiocManager::install("GEOquery",dependencies = TRUE)
+if (!requireNamespace("limma", quietly = TRUE)) 
+  BiocManager::install("limma",dependencies = TRUE)
+if (!requireNamespace("tinyarray", quietly = TRUE)) 
+  BiocManager::install("tinyarray",dependencies = TRUE)
+if (!requireNamespace("limma", quietly = TRUE)) 
+  BiocManager::install("limma",dependencies = TRUE)
+if (!requireNamespace("clusterProfiler", quietly = TRUE)) 
+  BiocManager::install("clusterProfiler",dependencies = TRUE)
+if (!requireNamespace("ComplexHeatmap", quietly = TRUE)) 
+  BiocManager::install("ComplexHeatmap",dependencies = TRUE)
+
+
+
+
+
+
+
 # 使用install.packages()函数安装其他需要的包
 BiocManager::install("org.Rn.eg.db")
 install.packages("AnnoProbe", dependencies = TRUE)
@@ -31,6 +46,7 @@ library("WGCNA")
 # 2.下载，需要改gse
 gse = "GSE35958"
 geo = geo_download(gse,destdir=tempdir())
+saveRDS(geo,file = "geo.rds")
 dim(geo$exp)
 max(geo$exp)
 # 根据max(geo$exp)的大小对表达数据进行log2转换（根据情况选择）

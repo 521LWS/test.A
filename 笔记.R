@@ -143,28 +143,33 @@ x
 #1.移除环境文件
 rm(ids, ids_570, geo_pd, geo_exp, fit, fit2, df, data, merged_data,probe_annotation,genes_expr,geo,exp,exp_exp,ensembl,averaged_data,contrast.matrix,DEG,DEGS)
 rm(list = ls())  #删除所有对象
-# 2. 交换第一行和第二行的顺序
+
+# 2..载入
+load("TCGA-COAD_RNA.Rdata")
+#使用read.csv()函数载入CSV文件
+data <- read.csv("your_file.csv", header = TRUE)
+# 读取以制表符分隔的文本文件
+data <- read.delim("file.txt", header = TRUE)
+# 以TXT格式读取基因表达数据
+data <- read.table(file_path, header = TRUE, sep = "\t")
+# 运行已储存模块
+source("data_cleaning.R")
+
+# 3. (行列区分就在于逗号在左在右，向量相当于数据表的一行，在公式运用上有一定相似度而不需要指明行列)
+交换第一行和第二行的顺序
 tableB <- tableB[c(2, 1), ]
 # 获取表B的行索引
 row_indices <- match(rownames(tableB), rownames(tableA))
 # 根据表B的行索引对表A的行进行排序
 tableA_sorted <- tableA[row_indices, ]
+# 根据表B的行索引对表A的行进列排序
+processed_geo <- geo_data[, row_indices]
+# 将 blockgenes 数据框的第一列的数值作为索引
+vecto <- blockgenes[[1]]
+# 使用索引从 color 数据框的第一列中提取相应位置的值
+dendro$labels <- color[vecto, 1]
 
-# 4.将结果转换为 tibble 格式(行名入表命名为gene)
-DEG <- tibble::rownames_to_column(DEG, var = "Gene")
-# 将第一列转换为行名，为了方便其他包处理
-rownames(geo_exp)<- geo_exp$symbol
-# 删除原始的ID列
-geo_exp <- geo_exp[, -1]
-# 6. 储存表格(更建议第一种方便调用)
-saveRDS(clinical,file = paste0(project,"_clinical.rds"))
-write.csv(geo$exp,paste0(gse,"_results.csv"))
-
-# 7.输出图片
-pdf(paste0("gse","-volcano.pdf"),onefile=FALSE)
-DEGS$plots
-dev.off()
-# 8. 查找(切记先进行WGCNA_matrix<-as.data.frame(WGCNA_matrix))
+# 4. 查找(切记先进行WGCNA_matrix<-as.data.frame(WGCNA_matrix))
 ##转置
 WGCNA_matrix <- t(WGCNA_matrix)
 #根据关键词提取必要的列
@@ -187,23 +192,37 @@ if ("LEP" %in% colnames(WGCNA_matrix)) {
 selected_columns <- WGCNA_matrix[c("A1BG", "LEP")]
 
 
+# 5.将结果转换为 tibble 格式(行名入表命名为gene)
+DEG <- tibble::rownames_to_column(DEG, var = "Gene")
+# 将第一列转换为行名，为了方便其他包处理
+rownames(geo_exp)<- geo_exp$symbol
+# 删除原始的ID列
+geo_exp <- geo_exp[, -1]
 
-# 9..载入
-load("TCGA-COAD_RNA.Rdata")
-#使用read.csv()函数载入CSV文件
-data <- read.csv("your_file.csv", header = TRUE)
-# 读取以制表符分隔的文本文件
-data <- read.delim("file.txt", header = TRUE)
-# 以TXT格式读取基因表达数据
-data <- read.table(file_path, header = TRUE, sep = "\t")
-# 运行已储存模块
-source("data_cleaning.R")
-# 10.重提取重命名列
+# 6.重提取重命名列
 gene_expression_data <- read.table("gene_expression_data.txt", header = TRUE)
+# 操作列
 df<-DEG[c(1,2,5)]
 colnames(df)<-c("Gene","10g2FC","pvalue")
 #转置
 WGCNA_matrix <- t(fpkm)
+# 操作行
+processed_geo <- processed_geo[c(1,2,5), ]
+
+
+
+
+# 10. 储存表格(更建议第一种方便调用)
+saveRDS(clinical,file = paste0(project,"_clinical.rds"))
+write.csv(geo$exp,paste0(gse,"_results.csv"))
+# 输出图片
+pdf(paste0("gse","-volcano.pdf"),onefile=FALSE)
+DEGS$plots
+dev.off()
+
+
+
+
 
 
 
@@ -262,3 +281,9 @@ ids_m <-ids_m [c(1,1)]
 #WGCNA
 source("标量化geo临床信息.R")
 processed_pd <- process_clinical_data(geo$pd)
+source("通过聚类进行样品筛选.R")
+process_sample_data(geo$exp, 260)
+#<<- ("在公式中影响环境表格")
+processed_geo <<- processed_geo
+
+

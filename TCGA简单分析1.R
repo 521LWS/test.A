@@ -6,6 +6,13 @@ if (!requireNamespace(package_name , quietly = TRUE))
 package_name  <- "TCGAbiolinks"
 if (!requireNamespace(package_name , quietly = TRUE)) 
   BiocManager::install(package_name )
+if (!requireNamespace("data.table", quietly = TRUE)) 
+  BiocManager::install("data.table",dependencies = TRUE)
+if (!requireNamespace("tinyarray", quietly = TRUE)) 
+  BiocManager::install("tinyarray",dependencies = TRUE)
+
+
+
 library(TCGAbiolinks)
 library(SummarizedExperiment)
 projects<-getGDCprojects()$project_id 
