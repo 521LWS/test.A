@@ -64,7 +64,7 @@ library(tinyarray)
 #清洗处理数据并
 counts<-TPM
 #数据清洗：data_cleaning.R文件
-source("data_cleaning.R")
+source("函数\\函数_data_cleaning.R")
 cleaned_data <- clean_data(counts)
 # 从文件中读取LUAD数据并转换为数据框
 counts <- as.data.frame(counts)

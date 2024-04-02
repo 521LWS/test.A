@@ -1,5 +1,0 @@
-git config --global user.email "2628220830@qq.com"
-git config --global user.name "521LWS"
-33DBB18B01C92DD677C2AF74AD886BCCCE17DC51
-gpg --armor --export 33DBB18B01C92DD677C2AF74AD886BCCCE17DC51
-git config --global user.signingkey 33DBB18B01C92DD677C2AF74AD886BCCCE17DC51

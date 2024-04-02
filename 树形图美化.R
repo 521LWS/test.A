@@ -11,7 +11,8 @@ if (!requireNamespace("ggnewscale", quietly = TRUE))
   BiocManager::install("ggnewscale",dependencies = TRUE)
 if (!requireNamespace("ggsci", quietly = TRUE)) 
   BiocManager::install("ggsci",dependencies = TRUE)
-
+if (!requireNamespace("ape", quietly = TRUE)) 
+  BiocManager::install("ape",dependencies = TRUE)
 
 
 library(ggtree)
@@ -21,16 +22,19 @@ library(ggtreeExtra)
 library(treeio)
 library(ggnewscale)
 library(ggsci)
+library(ape)
 
 
-
-
-
+#0. 准备工作（打开geo）
+source("函数\\函数_geo探针替换.R")
+source("函数\\函数_data_cleaning.R")
+processed_geo <- clean_data(process_geo(geo))
 # 对样本进行聚类(关键是定义sampleTree2)
 datExpr <-processed_geo[order(apply(processed_geo, 1, mad), decreasing = TRUE)[1:50], ]
-sampleTree2 <- hclust(dist(datExpr), method = "average")
+sampleTree <- hclust(dist(datExpr), method = "average")
+
 # 将 hclust 对象转换为 phylo 对象（这个容易看懂，edg代表树枝，第一列与第二列连线）
-sampleTree2 <- as.phylo(sampleTree2)
+sampleTree <- as.phylo(sampleTree)
 # 使用 ggtree 可视化样本树
 par(
   pin = c(12, 9),  # 设置绘图设备的尺寸
@@ -42,6 +46,10 @@ par(
 ggtree(sampleTree, layout = "circular") +
   geom_tiplab2(offset = 1, size = 2,vjust = 0.5) +
   geom_text(aes(label = node))  # 您可能想要使用 geom_text 来添加节点标签
+  source("函数\\函数_树枝分组函数.R")
+  parts <- split_and_fill(df = as.data.frame(as.phylo(sampleTree)$edge), chars = c("52", "65", "53"))
+
+
 # 如果您想突出显示特定节点并添加标签，您可以尝试以下代码：
 
 #2. 使用 ggtree 可视化样本树
@@ -57,6 +65,7 @@ geom_cladelabel(node =72, label = "setosa", offset =4, barsize =25, color = "gre
 geom_tiplab2(offset = 0.5, size = 2) 
 
 # 3.使用 ggtree 可视化样本树（需要根据树枝分组进行配色，调用树枝分组函数）
+
 ggtree(sampleTree2, layout = "circular") +
   geom_tiplab2(offset = 0.5, size = 2) +
   #geom_text(aes(label = node)) + # 如果您想添加节点标签，请取消注释此行
