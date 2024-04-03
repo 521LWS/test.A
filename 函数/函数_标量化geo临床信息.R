@@ -1,4 +1,4 @@
-
+#clinical_data=geo_pd
 process_clinical_data <- function(clinical_data) {
   # 根据关键词提取必要的列，并标量化
   keyword <- c("Patient_ID", "Age", "Sex", "gender", "Disease_Status", "diagno")
@@ -13,9 +13,21 @@ process_clinical_data <- function(clinical_data) {
   # mean_age <- mean(selected_columns$Age, na.rm = TRUE)
   # df$Age[is.na(selected_columns$Age) | selected_columns$Age == ""] <- mean_age
   # 将疾病状态转换为数值标量（包含Healthy或者是无效值）
-  selected_columns$Disease_Status <- ifelse(grepl("Healthy", selected_columns$Disease_Status, ignore.case = TRUE) | is.na(selected_columns$Disease_Status), 0, 1)
+  # selected_columns$Disease_Status <- ifelse(grepl("Healthy", selected_columns$Disease_Status, ignore.case = TRUE) | is.na(selected_columns$Disease_Status), 0, 1)
+  # 使用factor函数将字符转换为不同的数字(空格也被命名了，如果不删除无效值就不会被命名)
+  unique_values <- unique(selected_columns[["Disease_Status"]])
+  selected_columns[["Disease_Status"]] <- as.numeric(factor(selected_columns[["Disease_Status"]], levels = unique_values))
+
   # 将性别转换为二进制编码
   selected_columns$gender <- ifelse(grepl("Female", selected_columns$gender, ignore.case = TRUE), 0, 1)
+  
+  # 替换 NA
+  selected_columns[["Disease_Status"]] <- ifelse(is.na(selected_columns[["Disease_Status"]]), "-1", selected_columns[["Disease_Status"]])
+  
+  # 现在将数值向量转换为数值类型
+  selected_columns[["Disease_Status"]] <- as.numeric(selected_columns[["Disease_Status"]])
+  
+  
   
   
   return(selected_columns)

@@ -1,17 +1,17 @@
-process_geo <- function(geo_data) {
+process_geo <- function(geo) {
   library("tinyarray")
   library(AnnoProbe)
   library(plyr)
   # 检查并打印GPL信息
-  checkGPL(geo_data$gpl)
-  printGPLInfo(geo_data$gpl)
-  find_anno(geo_data$gpl)
+  checkGPL(geo$gpl)
+  printGPLInfo(geo$gpl)
+  find_anno(geo$gpl)
   
   # 获取探针注释
-  ids <- AnnoProbe::idmap(geo_data$gpl, destdir = tempdir())
+  ids <- AnnoProbe::idmap(geo$gpl, destdir = tempdir())
   
   # 提取基因表达数据
-  geo_exp <- as.data.frame(geo_data$exp)
+  geo_exp <- as.data.frame(geo$exp)
   geo_exp <- tibble::rownames_to_column(geo_exp, var = "Gene")
   
   # 合并基因表达数据和探针注释
