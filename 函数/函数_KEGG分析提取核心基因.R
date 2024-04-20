@@ -1,3 +1,15 @@
+
+prepare<- function() {
+  project=""
+  DEG=""
+  n="" 
+  hu_man=""
+  human_db=""
+  
+  
+}  
+
+
 #默认为human，其他需要谨慎
 KEGG_circ<- function(project,DEG,n, hu_man, human_db) {
   

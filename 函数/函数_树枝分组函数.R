@@ -1,4 +1,16 @@
-split_and_fill <- function(df = df, chars = chars) {
+
+prepare<- function() {
+  df = df
+  chars = chars
+
+  
+  }  
+
+
+
+
+
+split_and_fill <- function(df, chars) {
   
   # Extend chars vector by repeating its last element
   # 将字符向量扩展，重复其最后一个元素

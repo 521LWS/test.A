@@ -80,6 +80,14 @@ git push --set-upstream origin master
 git stash
 git pull origin main --allow-unrelated-histories
 git stash pop
+#解决上传内存过小
+git config --global http.postBuffer 524288000
+git remote set-url origin git@github.com:521LWS/test.A.git
+#密码19980505
+git remote add origin https://github.com/521LWS/test.A.git
+
+
+
 ....................................................................
 #help
 help(package=ggplot2)

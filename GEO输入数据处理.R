@@ -230,7 +230,7 @@ heatmap_KEGG(project=PROJECT,EXP=geo_exp,DEG=df,hu_man=hu_man, human_db=human_db
 select_gene=df[1:20,1]
 expr=geo_exp
 geneset = rio::import("Marker.xlsx")
-Group<- tinyarray::make_tcga_group(expr)
+Group<-group_list
 
 #source("函数\\函数_免疫浸润分析.R")
 #immune_cell(PROJECT,expr,geneset,Group,select_gene)

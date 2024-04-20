@@ -1,3 +1,14 @@
+
+
+prepare<- function() {
+  data=""
+  gene="GENE"
+  
+  
+}  
+
+
+
 clean_data <- function(data,gene) {
   # 查看数据结构
   str(data)

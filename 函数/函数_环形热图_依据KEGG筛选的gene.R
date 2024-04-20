@@ -6,6 +6,20 @@
 
 
 
+prepare<- function() {
+  project=""
+  EXP=""
+  DEG=""
+  hu_man=""
+  human_db=""
+  
+  
+  }  
+
+
+
+
+
 heatmap_KEGG<- function(project,EXP,DEG,hu_man, human_db) {
   if (missing(hu_man)) 
     hu_man <- "human"

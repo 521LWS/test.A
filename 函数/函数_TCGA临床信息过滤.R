@@ -1,4 +1,10 @@
-
+prepare<- function() {
+  TCGA=""
+  clinical_data=""
+ 
+  
+  
+}  
 
 process_TCGA_clinical <- function(TCGA, clinical_data) {
  

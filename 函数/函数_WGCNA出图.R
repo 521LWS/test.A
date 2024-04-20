@@ -1,6 +1,12 @@
-project=
-  datExpr=
-  numeric_pd=
+prepare<- function() {
+  project=""
+  datExpr=""
+  numeric_pd="" 
+  module="" 
+  
+  
+}  project=
+
 #还需要根据6.5的图更改6.6的module <- "turquoise"
 WGCNA<- function(project, datExpr, numeric_pd, module) {
 #6.1准备工作
@@ -206,4 +212,4 @@ verboseScatterplot(
 dev.off()
 }
 #source("函数\\函数_WGCNA出图.R")
-#WGCNA(project='TCGA-LUAD', `TCGA-LUADprocessed_counts_m`, `TCGA-LUADnumeric_TCGA_pd`) 
+#WGCNA(project='TCGA-LUAD', `TCGA-LUADprocessed_counts_m`, `TCGA-LUADnumeric_TCGA_pd`,module="brown") 

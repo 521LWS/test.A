@@ -1,3 +1,12 @@
+
+prepare<- function() {
+  clinical_data=""
+}  
+
+
+
+
+
 #clinical_data=geo_pd
 process_clinical_data <- function(clinical_data) {
   # 根据关键词提取必要的列，并标量化

@@ -1,3 +1,11 @@
+
+
+prepare<- function() {
+  geo=""
+  
+  
+}  
+
 process_geo <- function(geo) {
   library("tinyarray")
   library(AnnoProbe)

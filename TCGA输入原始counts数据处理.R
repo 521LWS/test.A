@@ -188,8 +188,8 @@ expr=processed_counts_m
 geneset = rio::import("Marker.xlsx")
 Group<- tinyarray::make_tcga_group(expr)
 
-#source("函数\\函数_免疫浸润分析.R")
-#immune_cell(PROJECT,expr,geneset,Group,select_gene)
+source("函数\\函数_免疫浸润分析.R")
+immune_cell(PROJECT,expr,geneset,Group,select_gene)
 
 
 

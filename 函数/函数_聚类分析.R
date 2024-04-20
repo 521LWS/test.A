@@ -1,4 +1,17 @@
 
+prepare<- function() {
+  project=""
+  DEG=""
+  hu_man=""
+  human_db=""
+
+  
+  }  
+
+
+
+
+
 #默认为human，其他需要谨慎
 go_KEGG<- function(project,DEG,hu_man, human_db) {
   
