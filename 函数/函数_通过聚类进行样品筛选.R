@@ -11,7 +11,7 @@ process_sample_data <- function(geo_data, h) {
 
   library(AnnoProbe)
   # 根据MAD方法筛选变化大的基因并转置
-  processed_geo <- t(geo_data[order(apply(geo_data, 1, mad), decreasing = TRUE)[1:10000], ])
+  processed_geo <- t(geo_data[order(apply(geo_data, 1, mad), decreasing = TRUE), ])
   
   # 对样本进行聚类以检测异常值
   sampleTree <- hclust(dist(processed_geo), method = "average")

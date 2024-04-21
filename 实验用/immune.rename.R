@@ -13,7 +13,7 @@ rename_files <- function(folder_path) {
     # 提取文件序号
     n <- i
     # 新文件名
-    new_name <- ifelse(n %% 2 == 0, paste0(n / 2, "-green"), paste0((n + 1) / 2, "-blue"))
+    new_name <- ifelse(n %% 2 == 0, paste0(n / 2, "-blue"), paste0((n + 1) / 2, "-red"))
     # 提取文件类型
     extension <- tools::file_ext(file_path)
     # 构建新文件路径

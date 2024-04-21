@@ -11,7 +11,7 @@ prepare<- function() {
 
 
 #默认为human，其他需要谨慎
-KEGG_circ<- function(project,DEG,n, hu_man, human_db) {
+KEGG_circ<- function(project,DEG,n, hu_man, human_db,keygene) {
   
 
     
@@ -83,9 +83,22 @@ KEGG_circ<- function(project,DEG,n, hu_man, human_db) {
   KEGG_gseresult <<-KEGG_gseresult
   Sys.sleep(5)
   
-  KEGG_gseresult@result<-KEGG_gseresult@result[order(abs(KEGG_gseresult@result$enrichmentScore),decreasing = TRUE), ]
+  KEGG_gseresult@result<-KEGG_gseresult@result[order(abs(KEGG_gseresult@result$qvalue),decreasing = FALSE), ]
   
-  Go1<-KEGG_gseresult@result[1:n,c(1,1,2,7,11)]
+  Go1<-KEGG_gseresult@result[1:n,c(1,1,2,8,11)]
+  if (missing(keygene))  {
+    Go1<- Go1
+  } else {
+    
+    Go1 <- Go1[grepl(paste(as.character(keygene), collapse = "|"), Go1[ ,5], ignore.case = TRUE),]
+    if(length(Go1)>12){
+      Go1<- Go1[c(1:12)]
+    }
+    
+  }
+  
+  
+  
   #Go1<-Go_Reactomeresult@result[1:100,c(1,1,2,8,11)]
   colnames(Go1)<-c("category","ID","term","adj_pval","genes")
   # 假设您的数据框为 data，genes 列为需要修改的列
@@ -94,6 +107,9 @@ KEGG_circ<- function(project,DEG,n, hu_man, human_db) {
   Go2<-gene_map[c(1,3)]#注意的是geneID是否是一样的格式，
   colnames(Go2)<-c("ID", "logFC")
   #合并获取最重要的数据框
+  
+  
+  
   circ2 <-circle_dat(Go1,Go2)
 
  
@@ -102,4 +118,4 @@ KEGG_circ<- function(project,DEG,n, hu_man, human_db) {
 
 #调用函数
 #source("函数\\函数_KEGG分析提取核心基因.R")#默认为human，其他需要谨慎
-#circ2=KEGG_circ(project,DEG,n=10, hu_man, human_db)
+#circ2=KEGG_circ(project,DEG,n=10, hu_man, human_db,keygene)

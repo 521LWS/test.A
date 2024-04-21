@@ -46,6 +46,17 @@ go_KEGG<- function(project,DEG,hu_man, human_db) {
   library(dplyr)
   library(RColorBrewer) 
   
+  #绘制net图
+  if (!requireNamespace("devtools", quietly = TRUE))
+    install_github('devtools')
+  library(devtools)
+  if (!requireNamespace("ievaKer/aPEAR", quietly = TRUE))
+    install_github('ievaKer/aPEAR')
+  
+  library('aPEAR')
+  
+  
+  
   # 1.数据处理（确定物种，更改OrgDb=org.Hs.eg.db。更改或检查DEG是否符合要求colnames(DEG)[1] <- "SYMBOL"，colnames(DEG)[2] <- "logFC"）
   # 重命名第一列
   colnames(DEG)[1] <- "SYMBOL"
@@ -77,9 +88,8 @@ go_KEGG<- function(project,DEG,hu_man, human_db) {
 # 2.1 进行GO项的GSEA
   Go_gseresult <- gseGO(geneList, human_db, keyType = "ENTREZID", ont = "all", nPerm = 10000, minGSSize = 10,maxGSSize = 1000, pvalueCutoff = 1)
   Go_gseresult<- setReadable(Go_gseresult,OrgDb=human_db,keyType ='ENTREZID')
-  Go_gseresult <<- Go_gseresult
-  Go_gseresult@result<-Go_gseresult@result[order(abs(Go_gseresult@result$enrichmentScore),decreasing = TRUE), ]
-  
+
+
 #弦图准备
 library(GOplot)
 library(tidyr)
@@ -209,9 +219,34 @@ library(tidyr)
   
   
   
+  Go_gseresult@result<- subset(Go_gseresult@result,abs(NES) >= 1 & pvalue< 0.05 & qvalue< 0.25)
+
+  Go_gseresult@result<-Go_gseresult@result[order(abs(Go_gseresult@result$pvalue),decreasing = FALSE), ]
+  Go_gseresult@result<-Go_gseresult@result[order(abs(Go_gseresult@result$qvalue),decreasing = FALSE), ]
+  Go_gseresult@result<-Go_gseresult@result[order(abs(Go_gseresult@result$NES),decreasing = TRUE), ]
+  Go_gseresult <<- Go_gseresult
+    if (nrow(Go_gseresult@result) > 500) {
+    
+    Go_gseresult@result<- subset(Go_gseresult@result,abs(NES) >= 1 & pvalue< 0.01 & qvalue< 0.25)
+      if (nrow(Go_gseresult@result) > 500) {
+    
+    Go_gseresult@result<- subset(Go_gseresult@result,abs(NES) >= 1 & pvalue< 0.001 & qvalue< 0.25)
+  } else {
+  }
+    if (nrow(Go_gseresult@result) > 500) {
+      
+      Go_gseresult@result<- subset(Go_gseresult@result,abs(NES) >= 1 & pvalue< 0.0001 & qvalue< 0.25)
+    } else {
+    } 
+    
+    
+  } else {
+  }
+
+  
   
 #terms	A data frame with columns for 'category', 'ID', 'term', adjusted p-value ('adj_pval') and 'genes'
-Go1<-Go_gseresult@result[,c(1,2,3,7,12)]
+Go1<-Go_gseresult@result[,c(1,2,3,8,12)]
 #Go1<-KEGG_gseresult@result[1:100,c(1,1,2,8,11)]
 #Go1<-KEGG_Reactomeresult@result[1:100,c(1,1,2,8,11)]
 colnames(Go1)<-c("category","ID","term","adj_pval","genes")
@@ -230,7 +265,13 @@ if (nrow(Go3) < 2000) {
 } else {
   Go3 <- subset(sorted_df, abs(logFC) >= 1)
 }
-Go4<-as.character(Go_gseresult@result[1:6, 2]) 
+
+if(nrow(Go1)>4){
+  n1=4
+} else {
+  n1=nrow(Go1)
+}
+Go4<-as.character(Go_gseresult@result[1:n1, 3]) 
 
 # 如果您想要绘制包含前三个标签的 GO 气泡图，请使用以下代码(要调整labels = 1.6)：
 pdf(paste0(project,"/",project, "-","Go_气泡.pdf"), width = 25, height = 8)
@@ -249,7 +290,7 @@ par(
   mar = c(1, 1, 1, 1) # 设置绘图区域的边距
 )
 # 使用 GOChord() 函数绘制 chord 图，并设置参数(如果报错选择了未命名的列（KEGG中），只需要把Go4调少就行了，另外颜色数量也要相应调整，这个函数有bug，慎用)
-p1<-GOChord(chord, space = 0.01, gene.order = 'logFC', gene.space = 0.25, gene.size = 3,lfc.col=c(rgb(1, 0, 0, 0.9), rgb(1, 1, 1, 0)), ribbon.col=brewer.pal(length(Go4), "Set3"))
+p1<-GOChord(chord, space = 0.01, gene.order = 'logFC', gene.space = 0.25, gene.size = 3,lfc.col=c(rgb(1, 0, 0, 0.9),rgb(1,1, 1, 0),rgb(0, 0, 1, 0.9)), ribbon.col=brewer.pal(length(Go4), "Set3"))
 print(p1)
 dev.off()
 
@@ -262,19 +303,34 @@ par(
   mar = c(1, 1, 1, 1) # 设置绘图区域的边距
 )
 
-pC1<- GOCluster1(circ,  Go3, Go4,clust.by="logFC",lfc.col=c(rgb(1, 0, 0, 0.5), rgb(1, 1, 1, 0.5), rgb(0, 0, 1, 0.5)),term.col=alpha(brewer.pal(length(Go4), "Paired"), 0.6),lfc.space=2.5,lfc.width=0.5,term.space=-3, term.width=1.5 )
+pC1<- GOCluster1(circ,  Go3, Go4,clust.by="logFC",lfc.col=c("steelblue", "white", "salmon"),term.col=alpha(brewer.pal(length(Go4), "Paired"), 0.6),lfc.space=2.5,lfc.width=0.5,term.space=-3, term.width=1.5 )
 
 print(pC1)
+dev.off()
+
+pdf(paste0(project,"/",project, "-","GSEA-Go_gseresult.pdf"), width = 10, height = 8)
+p1<-gseaplot2(Go_gseresult, 1:n1,  pvalue_table = TRUE, rel_heights = c(1.618, 0.618, 1),ES_geom = "dot")  # 绘制GO富集分析结果
+print(p1)
+dev.off()
+pdf(paste0(project,"/",project, "-","Go_net.pdf"), width = 10, height = 8)
+
+set.seed(654824)
+P1=enrichmentNetwork(Go_gseresult@result,colorBy = 'NES', nodeSize = 'setSize', verbose = TRUE)
+print(P1)
 dev.off()
 
 # 2. 计算富集结果
 #2. 2 进行KEGG通路的GSEA
 KEGG_gseresult <- gseKEGG(geneList,organism = hu_man,exponent = 1.5, nPerm = 1000,maxGSSize = 1000, pvalueCutoff =1)
 KEGG_gseresult <- setReadable(KEGG_gseresult ,OrgDb=human_db,keyType ='ENTREZID')
+KEGG_gseresult@result<- subset(KEGG_gseresult@result,abs(NES) >= 1 & pvalue< 0.05 & qvalue< 0.5)
+KEGG_gseresult@result<-KEGG_gseresult@result[order(abs(KEGG_gseresult@result$pvalue),decreasing = FALSE), ]
+
+KEGG_gseresult@result<-KEGG_gseresult@result[order(abs(KEGG_gseresult@result$qvalue),decreasing = FALSE), ]
+KEGG_gseresult@result<-KEGG_gseresult@result[order(abs(KEGG_gseresult@result$NES),decreasing = TRUE), ]
+
 KEGG_gseresult <<-KEGG_gseresult
 Sys.sleep(5)
-
-KEGG_gseresult@result<-KEGG_gseresult@result[order(abs(KEGG_gseresult@result$enrichmentScore),decreasing = TRUE), ]
 
 Go1<-KEGG_gseresult@result[,c(1,1,2,7,11)]
 #Go1<-Go_Reactomeresult@result[1:100,c(1,1,2,7,11)]
@@ -295,26 +351,28 @@ if (nrow(Go3) < 2000) {
 } else {
   Go3 <- subset(sorted_df, abs(logFC) >= 1)
 }
-Go4<-as.character(KEGG_gseresult@result[1:10, 2]) 
+
+if(nrow(Go1)>7){
+  n1=7
+} else {
+  n1=nrow(Go1)
+}
+Go4<-as.character(KEGG_gseresult@result[1:n1, 2]) 
 # 可秀图
 chord2 <- NULL
 chord2 <- chord_dat(circ2, Go3, Go4)
 # 使用 chord_dat() 函数创建 chord 图所需的数据
 
 # 继续执行后续的代码
-pdf(paste0(project,"/",project, "-","KEGG_弦图.pdf"), width = 10, height = 8)
+pdf(paste0(project,"/",project, "-","KEGG_弦图.pdf"), width = 12, height = 8)
 # 使用 GOChord() 函数绘制 chord 图，并设置参数(如果报错行数不匹配（KEGG中），只需要把Go4调少就行了，另外颜色数量也要相应调整)
 print(chord2)
-par(
-  pin = c(12, 9),  # 设置绘图设备的尺寸
-  cex = 0.6,       # 设置全局文字缩放因子
-  mar = c(1, 1, 1, 1) # 设置绘图区域的边距
-)
-p2<-GOChord(chord2, space = 0.01, gene.order = 'logFC', gene.space = 0.25, gene.size = 3,lfc.col=c(rgb(1, 0, 0, 0.9), rgb(1, 1, 1, 0)), ribbon.col=brewer.pal(length(Go4), "Set3"))
+
+p2<-GOChord(chord2, space = 0.01, gene.order = 'logFC', gene.space = 0.25, gene.size = 3,lfc.col=c(rgb(1, 0, 0, 0.9),rgb(1,1, 1, 0),rgb(0, 0, 1, 0.9)), ribbon.col=brewer.pal(length(Go4), "Set3"))
 print(p2)
 dev.off()
 # 执行某些操作
-pdf(paste0(project,"/",project, "-","KEGG_聚类图.pdf"), width = 10, height = 8)
+pdf(paste0(project,"/",project, "-","KEGG_聚类图.pdf"), width = 12, height = 8)
 
 par(
   pin = c(12, 9),  # 设置绘图设备的尺寸
@@ -322,17 +380,46 @@ par(
   mar = c(1, 1, 1, 1) # 设置绘图区域的边距
 )
 
-pC2<- GOCluster1(data=circ2,  Go3=Go3, process=Go4, clust.by="logFC",lfc.col=c(rgb(1, 0, 0, 0.5), rgb(1, 1, 1, 0.5), rgb(0, 0, 1, 0.5)),term.col=alpha(brewer.pal(length(Go4), "Paired"), 0.6),lfc.space=2.5,lfc.width=0.5,term.space=-3, term.width=1.5 )
+pC2<- GOCluster1(data=circ2,  Go3=Go3, process=Go4, clust.by="logFC",lfc.col=c("steelblue", "white", "salmon"),term.col=alpha(brewer.pal(length(Go4), "Paired"), 0.6),lfc.space=2.5,lfc.width=0.5,term.space=-3, term.width=1.5 )
 print(pC2)
 dev.off()
+
+
+pdf(paste0(project,"/",project, "-","GSEA_KEGG_gseresult.pdf"), width = 10, height = 8)
+p1<-gseaplot2(KEGG_gseresult, 1:n1, pvalue_table = TRUE, rel_heights = c(1.618, 0.618, 1),ES_geom = "line")# 绘制KEGG富集分析结果
+print(p1)
+dev.off()
+pdf(paste0(project,"/",project, "-","KEGG_net.pdf"), width = 10, height = 8)
+
+set.seed(654824)
+P1<-enrichmentNetwork(KEGG_gseresult@result,colorBy = 'NES', nodeSize = 'setSize', verbose = TRUE)
+print(P1)
+dev.off()
+
 
 # 2. 3 进行Reactome通路的GSEA
 Go_Reactomeresult <- gsePathway(geneList,organism = hu_man,exponent = 1.5, nPerm = 10000, minGSSize = 10, maxGSSize = 1000, pvalueCutoff = 1)
 Go_Reactomeresult <- setReadable(Go_Reactomeresult,OrgDb=human_db,keyType ='ENTREZID')
+Go_Reactomeresult@result<- subset(Go_Reactomeresult@result,abs(NES) >= 1 & pvalue< 0.05 & qvalue< 0.25)
+Go_Reactomeresult@result<-Go_Reactomeresult@result[order(abs(Go_Reactomeresult@result$pvalue),decreasing = FALSE), ]
+Go_Reactomeresult@result<-Go_Reactomeresult@result[order(abs(Go_Reactomeresult@result$qvalue),decreasing = FALSE), ]
+Go_Reactomeresult@result<-Go_Reactomeresult@result[order(abs(Go_Reactomeresult@result$NES),decreasing = TRUE), ]
 Go_Reactomeresult <<- Go_Reactomeresult
-Go_Reactomeresult@result<-Go_Reactomeresult@result[order(abs(Go_Reactomeresult@result$enrichmentScore),decreasing = TRUE), ]
-
-
+if (nrow(Go_Reactomeresult@result) > 500) {
+  
+  Go_Reactomeresult@result<- subset(Go_Reactomeresult,abs(NES) >= 1 & pvalue< 0.01 & qvalue< 0.25)
+  if (nrow(Go_Reactomeresult@result) > 500) {
+    
+    Go_Reactomeresult@result<- subset(Go_Reactomeresult,abs(NES) >= 1 & pvalue< 0.001 & qvalue< 0.25)
+    
+    
+    
+  } else {
+  }
+  
+  
+} else {
+}
 
 Go1<-Go_Reactomeresult@result[,c(1,1,2,7,11)]
 colnames(Go1)<-c("category","ID","term","adj_pval","genes")
@@ -351,7 +438,15 @@ if (nrow(Go3) < 2000) {
 } else {
   Go3 <- subset(sorted_df, abs(logFC) >= 1)
 }
-Go4<-as.character(Go_Reactomeresult@result[1:7, 2]) 
+
+if(nrow(Go1)>7){
+  n1=7
+} else {
+  n1=nrow(Go1)
+}
+
+
+Go4<-as.character(Go_Reactomeresult@result[1:n1, 2]) 
 # 可秀图
 chord3 <- NULL
 chord3 <- chord_dat(circ3, Go3, Go4)
@@ -360,7 +455,7 @@ chord3 <- chord_dat(circ3, Go3, Go4)
 Sys.sleep(10)  # 暂停5秒钟
 # 继续执行后续的代码
 
-pdf(paste0(project,"/",project, "-","Go_Reactomeresult_弦图.pdf"), width = 10, height = 8)
+pdf(paste0(project,"/",project, "-","Go_Reactomeresult_弦图.pdf"), width = 12, height = 8)
 # 使用 chord_dat() 函数创建 chord 图所需的数据
 par(
   pin = c(12, 9),  # 设置绘图设备的尺寸
@@ -369,11 +464,11 @@ par(
 )
 # 使用 GOChord() 函数绘制 chord 图，并设置参数(如果报错行数不匹配（KEGG中），只需要把Go4调少就行了，另外颜色数量也要相应调整)
 
-p3<-GOChord(chord3, space = 0.01, gene.order = 'logFC', gene.space = 0.25, gene.size = 3,lfc.col=c(rgb(1, 0, 0, 0.9), rgb(1, 1, 1, 0)), ribbon.col=brewer.pal(length(Go4), "Set3"))
+p3<-GOChord(chord3, space = 0.01, gene.order = 'logFC', gene.space = 0.25, gene.size = 3,lfc.col=c(rgb(1, 0, 0, 0.9),rgb(1,1, 1, 0),rgb(0, 0, 1, 0.9)), ribbon.col=brewer.pal(length(Go4), "Set3"))
 print(p3)
 dev.off()
 
-pdf(paste0(project,"/",project, "-","Go_Reactomeresult_聚类图.pdf"), width = 10, height = 8)
+pdf(paste0(project,"/",project, "-","Go_Reactomeresult_聚类图.pdf"), width = 12, height = 8)
 
 par(
   pin = c(12, 9),  # 设置绘图设备的尺寸
@@ -381,13 +476,22 @@ par(
   mar = c(1, 1, 1, 1) # 设置绘图区域的边距
 )
 
-pC3<- GOCluster1(data=circ3,  Go3=Go3, process=Go4,clust.by="logFC",lfc.col=c(rgb(1, 0, 0, 0.5), rgb(1, 1, 1, 0.5), rgb(0, 0, 1, 0.5)),term.col=alpha(brewer.pal(length(Go4), "Paired"), 0.6),lfc.space=2.5,lfc.width=0.5,term.space=-3, term.width=1.5 )
+pC3<- GOCluster1(data=circ3,  Go3=Go3, process=Go4,clust.by="logFC",lfc.col=c("steelblue", "white", "salmon"),term.col=alpha(brewer.pal(length(Go4), "Paired"), 0.6),lfc.space=2.5,lfc.width=0.5,term.space=-3, term.width=1.5 )
 
 print(pC3)
 dev.off()
 
+pdf(paste0(project,"/",project, "-","GSEA-Go_Reactomeresult.pdf"), width = 10, height = 8)
+p1<-gseaplot2(Go_Reactomeresult, 1:n1, pvalue_table = TRUE, rel_heights = c(1.618, 0.618, 1),ES_geom = "line")  # 绘制Reactome富集分析结果
+print(p1)
+dev.off()
 
+pdf(paste0(project,"/",project, "-","Go_Reactome_net.pdf"),width = 10, height = 8)
 
+set.seed(654824)
+P1=enrichmentNetwork(Go_Reactomeresult@result,colorBy = 'NES', nodeSize = 'setSize', verbose = TRUE)
+print(P1)
+dev.off()
 
 # 4.ggplot绘图（富集分析，可改颜色）
 if (!requireNamespace("enrichplot", quietly = TRUE)) 
@@ -395,21 +499,30 @@ if (!requireNamespace("enrichplot", quietly = TRUE))
 library(ggplot2)
 
 # 4.1根据排序后的索引重新排列数据框
-data <- head(as.data.frame(Go_gseresult), 20)
+Go_gseresult@result<-Go_gseresult@result[order(abs(Go_gseresult@result$NES),decreasing = FALSE), ]
+if(nrow(Go_gseresult@result)>20){
+  n1=20
+} else {
+  n1=nrow(Go_gseresult@result)
+}
+
+
+
+data <- head(as.data.frame(Go_gseresult), n1)
 data$count<-data$setSize
 
 pdf(paste0(project,"/",project, "-","Go_气泡1.pdf"), width = 10, height = 8)
 # 改为色块儿图例
 library(RColorBrewer)
 mypalette <- colorRampPalette(c("blue","white","red" ))(50)
-p1<-ggplot(data, aes(x = enrichmentScore, y = reorder(Description, enrichmentScore))) +
+p1<-ggplot(data, aes(x = count/length(geneList), y = reorder(Description, count/length(geneList)))) +
   geom_point(aes(color = -log10(pvalue), size = count), shape = 16, stroke = 1, alpha = 0.7) +
   scale_size_continuous(range=c(2,12))+
   scale_colour_gradientn(colors = mypalette, breaks = seq(min(-log10(data$pvalue)), max(-log10(data$pvalue)), length.out = 20)) +
   theme_minimal() + # 改为色块儿图例
-  labs(x = "geneRatio", y = "Pathway") +
+  labs(x = "geneRatio", y = "GO") +
   guides(
-    color = guide_colorsteps(title = "-log10pvalue")  # 手动指定图例中的刻度标签数量
+    color = guide_colorsteps(title = "-log10(pvalue)")  # 手动指定图例中的刻度标签数量
   ) +# 将图例改为渐变色块形式
   theme(
     axis.line = element_line(color = "black", size = 0.5, linetype = "solid"),
@@ -422,21 +535,28 @@ p1<-ggplot(data, aes(x = enrichmentScore, y = reorder(Description, enrichmentSco
 print(p1)
 dev.off()
 # 4.2根据排序后的索引重新排列数据框
-data <- head(as.data.frame(KEGG_gseresult), 20)
+
+if(nrow(KEGG_gseresult@result)>20){
+  n1=20
+} else {
+  n1=nrow(KEGG_gseresult@result)
+}
+
+data <- head(as.data.frame(KEGG_gseresult), n1)
 data$count<-data$setSize
 
 pdf(paste0(project,"/",project, "-","KEGG_气泡1.pdf"), width = 10, height = 8)
 # 改为色块儿图例
 library(RColorBrewer)
 mypalette <- colorRampPalette(c("blue","white","red" ))(50)
-p1<-ggplot(data, aes(x = enrichmentScore, y = reorder(Description, enrichmentScore))) +
+p1<-ggplot(data, aes(x = count/length(geneList), y = reorder(Description, count/length(geneList)))) +
   geom_point(aes(color = -log10(pvalue), size = count), shape = 16, stroke = 1, alpha = 0.7) +
   scale_size_continuous(range=c(2,12))+
   scale_colour_gradientn(colors = mypalette, breaks = seq(min(-log10(data$pvalue)), max(-log10(data$pvalue)), length.out = 20)) +
   theme_minimal() + # 改为色块儿图例
   labs(x = "geneRatio", y = "Pathway") +
   guides(
-    color = guide_colorsteps(title = "-log10pvalue")  # 手动指定图例中的刻度标签数量
+    color = guide_colorsteps(title = "-log10(pvalue)")  # 手动指定图例中的刻度标签数量
   ) +# 将图例改为渐变色块形式
   theme(
     axis.line = element_line(color = "black", size = 0.5, linetype = "solid"),
@@ -450,21 +570,29 @@ print(p1)
 dev.off()
 
 # 4.3 根据排序后的索引重新排列数据框
-data <- head(as.data.frame(Go_Reactomeresult), 10)
+
+if(nrow(Go_Reactomeresult@result)>20){
+  n1=20
+} else {
+  n1=nrow(Go_Reactomeresult@result)
+}
+
+
+data <- head(as.data.frame(Go_Reactomeresult), n1)
 data$count<-data$setSize
 
 pdf(paste0(project,"/",project, "-","Go_Reactomeresult气泡1.pdf"), width = 10, height = 8)
 # 改为色块儿图例
 library(RColorBrewer)
 mypalette <- colorRampPalette(c("blue","white","red" ))(50)
-p1<-ggplot(data, aes(x = enrichmentScore, y = reorder(Description, enrichmentScore))) +
+p1<-ggplot(data, aes(x = count/length(geneList), y = reorder(Description, count/length(geneList)))) +
   geom_point(aes(color = -log10(pvalue), size = count), shape = 16, stroke = 1, alpha = 0.7) +
   scale_size_continuous(range=c(2,12))+
   scale_colour_gradientn(colors = mypalette, breaks = seq(min(-log10(data$pvalue)), max(-log10(data$pvalue)), length.out = 20)) +
   theme_minimal() + # 改为色块儿图例
   labs(x = "geneRatio", y = "Pathway") +
   guides(
-    color = guide_colorsteps(title = "-log10pvalue")  # 手动指定图例中的刻度标签数量
+    color = guide_colorsteps(title = "-log10(pvalue)")  # 手动指定图例中的刻度标签数量
   ) +# 将图例改为渐变色块形式
   theme(
     axis.line = element_line(color = "black", size = 0.5, linetype = "solid"),
@@ -473,6 +601,7 @@ p1<-ggplot(data, aes(x = enrichmentScore, y = reorder(Description, enrichmentSco
     axis.text = element_text(color = "black", size = 7, angle = 0, hjust = 0.5, vjust = 0.5),
     panel.border = element_rect(color = "black", fill = NA, size = 1)
   )
+
 print(p1)
 dev.off()
 
@@ -480,18 +609,7 @@ dev.off()
 
 
 # 5.绘图（GSEA）
-pdf(paste0(project,"/",project, "-","GSEA-Go_gseresult.pdf"), width = 10, height = 8)
-p1<-gseaplot2(Go_gseresult, 1:3,  pvalue_table = TRUE, rel_heights = c(1.618, 0.618, 1),ES_geom = "dot")  # 绘制GO富集分析结果
-print(p1)
-dev.off()
-pdf(paste0(project,"/",project, "-","GSEA-Go_KEGG_gseresult.pdf"), width = 10, height = 8)
-p1<-gseaplot2(KEGG_gseresult, 1:3, pvalue_table = TRUE, rel_heights = c(1.618, 0.618, 1),ES_geom = "line")# 绘制KEGG富集分析结果
-print(p1)
-dev.off()
-pdf(paste0(project,"/",project, "-","GSEA-Go_Reactomeresult.pdf"), width = 10, height = 8)
-p1<-gseaplot2(Go_Reactomeresult, 1:3, pvalue_table = TRUE, rel_heights = c(1.618, 0.618, 1),ES_geom = "line")  # 绘制Reactome富集分析结果
-print(p1)
-dev.off()
+
 
 
 

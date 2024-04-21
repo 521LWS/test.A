@@ -6,8 +6,8 @@ if (!requireNamespace("GSVA", quietly = TRUE))
   BiocManager::install("GSVA",dependencies = TRUE)
 if (!requireNamespace("dplyr", quietly = TRUE))
   BiocManager::install("dplyr",dependencies = TRUE)
-if (!requireNamespace("Hmisc", quietly = TRUE))
-  BiocManager::install("Hmisc",dependencies = TRUE)
+if (!requireNamespace("WGCNA", quietly = TRUE))
+  BiocManager::install("WGCNA",dependencies = TRUE)
 if (!requireNamespace("pheatmap", quietly = TRUE))
   BiocManager::install("pheatmap",dependencies = TRUE)
 
@@ -17,7 +17,7 @@ library(ggplot2)
 library(tinyarray)
 library(GSVA)
 library(dplyr)
-library(Hmisc)
+library(WGCNA)
 library(pheatmap)
 
 #????ϸ?????ȼ???
@@ -44,15 +44,16 @@ draw_boxplot(re,Group,color = c("#1d4a9d","#e5171b"))
 
 #?????????Է???
 
-nc = t(rbind(re,expr[choose_gene_1se,]))
-m = rcorr(nc)$r[1:nrow(re),(ncol(nc)-length(choose_gene_1se)+1):ncol(nc)]
+# 计算基因特征相关性
+geneTraitSignificance <- as.data.frame(cor(t(re), t(expr[choose_gene_1se,]), use = "p"))
+# 计算基因特征相关性的 p 值
+p <- as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nrow(t(re))))
 
-p = rcorr(nc)$P[1:nrow(re),(ncol(nc)-length(choose_gene_1se)+1):ncol(nc)]
 p[1:4,1:4]
 
-tmp <- matrix(ifelse(p < 0.001, "***",ifelse(p < 0.01, "**", ifelse(p < 0.05, "*", ""))) , nrow = nrow(p))
+tmp <- matrix(ifelse(p < 0.0001, "****",ifelse(p < 0.001, "***",ifelse(p < 0.01, "**", ifelse(p < 0.05, "*", "")))), nrow = nrow(p))
 
-p1 <- pheatmap(t(m),
+p1 <- pheatmap(t(geneTraitSignificance),
                display_numbers =t(tmp),
                angle_col =45,
                color = colorRampPalette(c("#92b7d1", "white", "#d71e22"))(100),
@@ -71,7 +72,7 @@ rownames(annotation_col)<-colnames(re)
 pheatmap(re,
          show_colnames = T, # 不展示行名
          cluster_rows = F, # 不对行聚类
-         cluster_cols = F, # 不对列聚类
+         cluster_cols = TRUE, # 不对列聚类
          annotation_col = annotation_col, # 加注释
          cellwidth=1,cellheight=5, # 设置单元格的宽度和高度
          fontsize=5) # 字体大小

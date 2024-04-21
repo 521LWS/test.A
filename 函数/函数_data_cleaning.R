@@ -16,8 +16,12 @@ clean_data <- function(data,gene) {
   # 检查是否有缺失值
   if (any(is.na(data))) {
     # 删除含有缺失值的行
-   data <- na.omit(data) 
+   data <- na.omit(data)  
    data <- data[complete.cases(data), ]
+   #删除整行都是缺失值的行
+   data <- data[rowSums(is.na(data)) != ncol(data), ]
+
+  
     # 删除含有缺失值的列
     data <- data[, colSums(is.na(data)) == 0]
     
@@ -65,7 +69,7 @@ clean_data <- function(data,gene) {
   
   # log2转化
 
-  if (max(data) > 50) {
+  if (max(data) > 300) {
     data <- log2(data + 1)
     cat("数据已经进行了log2转换。\n")
   }

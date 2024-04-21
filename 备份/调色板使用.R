@@ -34,6 +34,8 @@ for (i in 1:n) {
   text(0.5, 0.5, labels = colors()[i], col = "black", cex = 0.8)
 }
 
+cat.col=c('#B3EAFF','#B2B2FE',"#FEB2B3","#C6EBB3", "#B4FFD9")
+
 
 # 透明度可以改变两个渐变色的对比度一个0.9，一个0.
 scale_fill_manual(values = c("#EDB749","#3CB2EC","#9C8D58"))
@@ -43,6 +45,9 @@ mypalette=c(rgb(1, 0, 0, 0.9), rgb(1, 1, 1, 0))
 mypalette <- colorRampPalette(c("red","white", "blue"))(9)
 
 color = colorRampPalette(c("steelblue", "white", "salmon"))(100),
+
+
+lfc.col=c(rgb(0, 0, 1, 0.9),rgb(1,1, 1, 0),rgb(1, 0, 0, 0.9))
 
 mypalette <- brewer.pal(4,"BrBG")[1:4]
 # 使用 alpha() 函数调节颜色的透明度
@@ -66,15 +71,15 @@ image(1:9,100,as.matrix(1:9),col=my_color,xlab="Greens (sequential)",
 
 
 ## display a divergent palette
-display.brewer.pal(4,"BrBG")
+display.brewer.pal(5,"BrBG")
 devAskNewPage(ask=TRUE)
 
 ## display a qualitative palette
-display.brewer.pal(4,"Accent")
+display.brewer.pal(3,"Set2")
 devAskNewPage(ask=TRUE)
 
 ## display a palettes simultanoeusly
-display.brewer.all(n=10)
+display.brewer.all(n=5)
 devAskNewPage(ask=TRUE)
 
 display.brewer.all()

@@ -91,6 +91,11 @@ Go_Reactomeresult <- gsePathway(geneList,organism = "human",exponent = 1.5, nPer
 Go_Reactomeresult<-setReadable(Go_Reactomeresult,OrgDb=org.Hs.eg.db,keyType ='ENTREZID')
 
 # 3.绘图（富集分析）
+
+
+if (!requireNamespace("enrichplot", quietly = TRUE)) 
+  BiocManager::install("enrichplot",dependencies = TRUE)
+library(enrichplot)
 dotplot(Go_gseresult,color = "pvalue", showCategory = 20, font.size = 8,label_format=80)
 ridgeplot(Go_gseresult,showCategory = 20,label_format=100)
 
@@ -101,8 +106,7 @@ dotplot(Go_Reactomeresult, showCategory = 10, label_format=100)
 ridgeplot(Go_Reactomeresult,showCategory = 10,label_format=100)
 
 # 4.ggplot绘图（富集分析，可改颜色）
-if (!requireNamespace("enrichplot", quietly = TRUE)) 
-  BiocManager::install("enrichplot",dependencies = TRUE)
+
 library(ggplot2)
 # 根据排序后的索引重新排列数据框
 data <- head(as.data.frame(Go_gseresult), 20)
@@ -111,8 +115,8 @@ data$count<-data$setSize
 library(RColorBrewer)
 mypalette <- colorRampPalette(c("blue","white","red" ))(50)
 
-ggplot(data, aes(x = enrichmentScore, y = reorder(Description, enrichmentScore))) +
-  geom_point(aes(color =-log10(pvalue), size = count), shape = 16) +
+ggplot(data, aes(x = count/length(geneList), y = reorder(Description, count/length(geneList)))) +
+  geom_point(aes(color =-log10(qvalue), size = count), shape = 16) +
   scale_colour_gradient(low = mypalette[1], high = mypalette[40]) +
   #scale_colour_gradientn(colors = mypalette)+
   #scale_colour_gradient2(low = mypalette[1], mid = adjustcolor("grey", alpha.f = 0.5), high = mypalette[9], midpoint = 0.00010035)+
@@ -135,17 +139,17 @@ ggplot(data, aes(x = enrichmentScore, y = reorder(Description, enrichmentScore))
 
 
 
-# 改为色块儿图例
+# 改为色块儿图例(qvalue由于在go分析中很容易相同，会报错，建议用p)
 mypalette <- colorRampPalette(c("blue","white","red" ))(50)
 ggplot(data, aes(x = enrichmentScore, y = reorder(Description, enrichmentScore))) +
-  geom_point(aes(color = -log10(pvalue), size = count), shape = 16, stroke = 1, alpha = 0.7) +
+  geom_point(aes(color = qvalue, size = count), shape = 16, stroke = 1, alpha = 0.7) +
  
   scale_size_continuous(range=c(2,6))+
-  scale_colour_gradientn(colors = mypalette, breaks = seq(min(-log10(data$pvalue)), max(-log10(data$pvalue)), length.out = 20)) +
+  scale_colour_gradientn(colors = mypalette, breaks = seq(min((data$qvalue)), max((data$qvalue)), length.out = 20)) +
   theme_minimal() + # 改为色块儿图例
   labs(x = "geneRatio", y = "Pathway") +
   guides(
-    color = guide_colorsteps(title = "-log10pvalue")  # 手动指定图例中的刻度标签数量
+    color = guide_colorsteps(title = "qvalue")  # 手动指定图例中的刻度标签数量
   ) +# 将图例改为渐变色块形式
   theme(
     axis.line = element_line(color = "black", size = 0.5, linetype = "solid"),

@@ -2,10 +2,10 @@ prepare<- function() {
   project=""
   datExpr=""
   numeric_pd="" 
-  module="" 
+  module="turquoise" 
   
   
-}  project=
+} 
 
 #还需要根据6.5的图更改6.6的module <- "turquoise"
 WGCNA<- function(project, datExpr, numeric_pd, module) {
@@ -27,11 +27,11 @@ library(AnnoProbe)
 
 
 ## 方法一：SD
-##WGCNA_matrix <- t(processed_geo[order(apply(processed_geo, 1, sd), decreasing = TRUE)[1:10000], ])
+##datExpr <- t(datExpr[order(apply(datExpr, 1, sd), decreasing = TRUE)[1:10000], ])
 ## 方法二：MAD最常用
-datExpr <- t(datExpr[order(apply(datExpr, 1, mad), decreasing = TRUE)[1:10000], ])
+#datExpr <- t(datExpr[order(apply(datExpr, 1, mad), decreasing = TRUE)[1:10000], ])
 ## 方法三：全基因
-##WGCNA_matrix <- t(processed_geo)
+datExpr <- t(datExpr)
 
 # 6.2. 确定POWER值（只需要修改cex1<-0.85）
 # 定义一组用于软阈值的幂次的范围
@@ -132,12 +132,15 @@ datTraits <- processed2_pd
 
 moduleTraitCor <- cor(MEs, datTraits, use = "p")
 # 计算相关系数的 p 值
-nSamples <- ncol(datTraits)
-moduleTraitPvalue <- corPvalueStudent(moduleTraitCor, nSamples)
+nSamples <- nrow(datTraits)
+
+p<- corPvalueStudent(moduleTraitCor, nSamples)
+moduleTraitPvalue<- matrix(ifelse(p < 0.0001, "****",ifelse(p < 0.001, "***",ifelse(p < 0.01, "**", ifelse(p < 0.05, "*", "")))), nrow = nrow(p))
+
 # 绘制模块特征向量与临床特征的热图
 pdf(paste0(project,"/",project, "-","Module_trait_relationships.pdf"), width =6, height = 9)
 # 创建文本矩阵，包含相关系数和 p 值,\n 是一个转义序列，表示换行符。在字符串中使用 \n 可以实现换行的效果。
-textMatrix <- paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 1), ")", sep = "")
+textMatrix <- paste(signif(moduleTraitCor, 2), "\n", moduleTraitPvalue, sep = "")
 dim(textMatrix) <- dim(moduleTraitCor)
 # 使用 labeledHeatmap 函数绘制热图
 par(
@@ -145,8 +148,8 @@ par(
   cex = 0.6,       # 设置全局文字缩放因子
   mar = c(4, 8, 4, 4) # 设置绘图区域的边距
 )
-red_alpha <- adjustcolor("red", alpha.f = 0.5)
-blue_alpha <- adjustcolor("blue", alpha.f = 0.5)
+red_alpha <- adjustcolor("red", alpha.f = 0.6)
+blue_alpha <- adjustcolor("blue", alpha.f = 0.6)
 white <- "white"
 labeledHeatmap(
   Matrix = moduleTraitCor,                      # 相关系数矩阵

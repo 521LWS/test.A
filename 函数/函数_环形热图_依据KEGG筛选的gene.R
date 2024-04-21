@@ -59,7 +59,10 @@ select_gene <- unique(circ2$genes)
 print(select_gene)
 
 #将小鼠基因转化为大写
+DEG<-as.data.frame(DEG)
+EXP<-as.data.frame(EXP)
 DEG$Gene<-toupper(DEG$Gene)
+
 EXP<-rownames_to_column(EXP,"SYMBOL")
 EXP$SYMBOL<-toupper(EXP$SYMBOL)
 source("函数\\函数_data_cleaning.R")#去除NA，去除gene列的重复行取平均，取log
@@ -122,21 +125,21 @@ p3=ggtree(tree,branch.length = "none", layout = "circular",
        linetype = 1,size = 0.5, ladderize = T)+
   layout_fan(angle =180)+
   theme(plot.margin=margin(0,1,-7,0,"cm"))+
-  geom_tiplab(offset=14,show.legend=FALSE,size=1.8,
+  geom_tiplab(offset=8.2,show.legend=FALSE,size=1.8,
               color = "black",starstroke = 0)+
   
   
   
   geom_fruit(data=exp2,geom=geom_tile,
              mapping=aes(y=Gene,x=name,fill=value),
-             pwidth=0.6,offset=0.02,
+             pwidth=0.55,offset=0.02,
              axis.params=list(axis="x",text.angle=-90,text.size=2,hjust=0))+
   scale_fill_gradientn(colours = alpha(rev(RColorBrewer::brewer.pal(11,"RdBu")), alpha = 0.9))+
   
   
   new_scale_fill()+
   geom_fruit(data=df4,geom=geom_point, mapping=aes(y=Gene, x=logFC,color=-log10(pvalue)), size=1.5,
-             pwidth=0.3,offset = 0.45,axis.params=list(axis="x"  #添加x轴
+             pwidth=0.3,offset = 0.55,axis.params=list(axis="x"  #添加x轴
              ),
              grid.params=list(
                vline=T
@@ -151,7 +154,7 @@ p3=ggtree(tree,branch.length = "none", layout = "circular",
   new_scale_fill()+
   geom_fruit(data=group,geom=geom_tile,
              mapping=aes(y=genes,x=group,fill=term),color="white",
-             pwidth=0.2,offset=0.1)+
+             pwidth=0.2,offset=0.005)+
   scale_fill_manual(values = brewer.pal(10,"BrBG")[1:26])+
   
   

@@ -1,9 +1,12 @@
 
 geo <-GSE35958
-gse <-"GSE35958"
+gse <-"GSE"
+PROJECT<-gse
 PROJECT<-"GSE35958"
 h=180
-Formula <- "normal-tumor"
+Formula <- "tumor-normal"
+hu_man <- "human"
+human_db <- "org.Hs.eg.db"
 
 # 1.数据处理(取探针平均值)
 options(scipen = 999)
@@ -114,19 +117,25 @@ group_list <- ifelse(str_detect(geo_pd$title, "ost"), "tumor", "normal")
 #1.4 芯片数据处理(为防止影响整体代码，包装成了function，只需要更改运行内部代码)
 
      chuli<-function(geo_exp){
-
+       
+       
+  hu_man="rat"
+        human_db="org.Rn.eg.db"
+        
+        
         gse <-"GSE"
          PROJECT<-"GSE"
-         Formula <- "control-ang"
+         Formula <- "shYANK2-control"
          h=180
-         hu_man="rat"
-        human_db="org.Rn.eg.db"
+       
   
 
-        geo_exp=as.data.frame(RawData[,c(8,2:7)])
+        geo_exp=as.data.frame(gene_expression_xls[,c(2:8)])
         colnames(geo_exp)[1] <- "gene"
 
         library(tidyr)
+        library(stringr)
+        
         geo_exp <- separate_rows(geo_exp, gene, sep = "; ")
 
         # 1.1 样品筛选(关键在于更改样品筛选中的h值)
@@ -137,7 +146,7 @@ group_list <- ifelse(str_detect(geo_pd$title, "ost"), "tumor", "normal")
         geo_exp<-process_sample_data
 
 
-        group_list=ifelse(str_detect(colnames(geo_exp), "Con"), "control", "ang")
+        group_list=ifelse(str_detect(colnames(geo_exp), "M"), "control", "shYANK2")
         print(group_list)
 
 }
@@ -150,7 +159,7 @@ group_list <- ifelse(str_detect(geo_pd$title, "ost"), "tumor", "normal")
 
 
 
-# 2.差异分析（探针处理方式为取平均值）(需要更改分组信息)
+# 2.差异分析（探针处理方式为取平均值）(需要更改分组信息)（limma包处理的是log后的数据，此时得到的2^logFC才接近log前数据的倍数）
 # 加载所需的包
 library(limma)
 library(stringr)
@@ -211,9 +220,8 @@ WGCNA(project=PROJECT, datExpr=geo_exp, numeric_pd=numeric_geo_pd, module="turqu
 #df <- na.omit(df)
 
 
-df=GSEdf
-EXP=`GSE_exp(mean)`
-#.4.1聚类分析
+
+#.4.1聚类分析（一般认为|NES|>1，NOM p-val<0.05，FDR q-val<0.25）
 source("函数\\函数_聚类分析.R")#默认为human，其他需要谨慎
 go_KEGG(project=PROJECT,DEG=df,hu_man=hu_man, human_db=human_db)
 
@@ -228,13 +236,29 @@ heatmap_KEGG(project=PROJECT,EXP=geo_exp,DEG=df,hu_man=hu_man, human_db=human_db
 #4.3免疫浸润分析（需要自己选基因）
 
 select_gene=df[1:20,1]
-expr=geo_exp
+
+expr=as.matrix(geo_exp)
+
 geneset = rio::import("Marker.xlsx")
 Group<-group_list
-
+Group<-as.character(Group)
 #source("函数\\函数_免疫浸润分析.R")
-#immune_cell(PROJECT,expr,geneset,Group,select_gene)
+#immune_cell(PROJECT,expr=as.matrix(expr),geneset,Group=as.character(Group),select_gene)
 
+#4.4 临床数据相关性分析（可输入select_gene=c("PCK1")）
+
+geo_exp=`GSE_exp(mean)`
+numeric_pd=`numeric_pd`
+df=GSEdf
+
+source("函数\\函数_临床数据相关性分析.R")
+correlation_gene_pd1(project=PROJECT,date=geo_exp,pd=numeric_pd,df) 
+
+
+#4.5   
+source("函数\\函数_韦恩图.R")
+venn5(PROJECT,set1=t(df[1]),set2=TCGA-BRCA_select_gene_DiseaseStatus,set3=TCGA-BRCA_select_gene_Age, set4=TCGA-BRCA_select_gene_gender, set5=TCGA-BRCA_select_gene_survival)
+venn2(PROJECT,set1=t(df[1]),set2=select_gene)
 
 
 
@@ -270,7 +294,7 @@ DEGS  <-  get_deg_all(
   my_genes = NULL,
   show_rownames = TRUE,
   cluster_cols = TRUE,
-  color_volcano = c("#2874C5", "grey", "#f87669"),
+  color_volcano = c("#f87669", "grey","#2874C5"),
   logFC_cutoff = 1,
   pvalue_cutoff = 0.05,
   adjust = FALSE,
@@ -281,6 +305,100 @@ DEGS  <-  get_deg_all(
   species = "human"
 )
 # 生成差异表达基因的图像
+
+
+#8.1标签火山图(只需要更改DEG1,注意DEG1是筛选前数据，这样图好看)
+if (!requireNamespace('EnhancedVolcano', quietly = TRUE))
+  BiocManager::install('EnhancedVolcano')
+ library("EnhancedVolcano")
+ library(clusterProfiler)
+ library(org.Hs.eg.db) 
+ 
+# 重命名第一列
+
+# 整理并重命名
+DEG<-DEG[c(1,2,5)]
+colnames(DEG)<-c("SYMBOL","logFC","pvalue")
+# 从第一列提取基因名称
+genename=as.character(DEG[, 1])
+gene_map=bitr(genename,fromType="SYMBOL",toType="ENTREZID",OrgDb=human_db)
+# 通过符号将gene_map与DEG合并
+gene_map <- inner_join(gene_map, DEG, by = "SYMBOL")
+# 移除含有NA值的行
+gene_map <- na.omit(gene_map)
+# 获取排序后的索引
+sorted_index <- order(gene_map[, 3], decreasing = TRUE)
+# 根据排序后的索引重新排列数据框
+gene_map <- gene_map[sorted_index, ]
+DEG<-gene_map[c(1,3,4)]
+colnames(DEG)<-c("Gene","logFC","pvalue")
+
+p1=EnhancedVolcano(DEG,
+                lab = DEG[,1],
+                x = 'logFC',
+                y = 'pvalue',
+             
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 0.05,
+                FCcutoff = 1.0,
+                
+                #标记设置
+               pointSize = c(ifelse(abs(DEG$logFC)>1.5, 8, 2)),  # 使用ifelse语句自定义点的大小
+               selectLab =DEG[abs(DEG$logFC)>1.5,1],
+               
+               
+                labSize = 4.0,
+                labCol = 'black',
+                labFace = 'bold',
+                #boxedLabels = TRUE,
+                shape = c(1,4,23,25),
+               #图例
+                colAlpha = 0.8,
+                legendLabels=c('Not sig.', 'Log (base 2) FC', 'p-value', 'p-value & Log (base 2) FC'),
+                legendPosition = 'right',
+                legendLabSize = 8,
+                legendIconSize = 4.0,
+                #箭头
+                drawConnectors = TRUE,
+                widthConnectors = 1.0,
+                colConnectors = 'black',
+               
+                
+                #边框
+                gridlines.major = TRUE,
+                gridlines.minor = FALSE,
+                border = 'full',
+                borderWidth = 0.5,
+                borderColour = 'black',
+                
+               
+                 )
+
+
+#此处根据需要修改
+p2=p1+
+ggplot2::coord_cartesian(xlim=c(-2, 2)) +  # 限制x轴的范围
+  
+  ggplot2::scale_x_continuous(
+    breaks=seq(-2,2, 1))+  # 自定义x轴上的刻度标记
+ggplot2::coord_cartesian(ylim=c(0, 8)) +  # 限制y轴的范围
+  ggplot2::scale_y_continuous(
+    breaks=seq(0,8, 2)) # 自定义x轴上的刻度标记
+  
+  
+  pdf(paste0(gse,"/",gse, "-", "火山图.pdf"), onefile =TRUE,width =9, height =10)
+
+print(p1)
+
+print(p2)
+
+dev.off()
+ 
+
+
+
+
+
 
 
 
