@@ -155,7 +155,7 @@ names(y)<-x
 x[c(2:5)]<-c(2:5)#已改变x
 append(x=x,99,3)#未改变x，需赋值
 x
-
+drv != "4",表示不等于
 双等号 == 来进行相等性比较
 ............................................................
 数据处理分析
@@ -172,9 +172,9 @@ load("TCGA-COAD_RNA.Rdata")
 #使用read.csv()函数载入CSV文件
 data <- read.csv("your_file.csv", header = TRUE)
 # 读取以制表符分隔的文本文件
-data <- read.delim("file.txt", header = TRUE)
+data <- read.delim("GPL19057.soft.gz", header = TRUE)
 # 以TXT格式读取基因表达数据
-data <- read.table(file_path, header = TRUE, sep = "\t")
+data <- read.table("GSE47529_series_matrix.txt", header = TRUE, sep = "\t")
 # 运行已储存模块
 source("data_cleaning.R")
 GDSC2_Res <- exp(GDSC2_Res)  #下载的数据是被log转换过的，逆转回去
@@ -183,8 +183,8 @@ GDSC2_Res <- exp(GDSC2_Res)  #下载的数据是被log转换过的，逆转回�
 # 4. 查找(切记先进行WGCNA_matrix<-as.data.frame(WGCNA_matrix))
 # 筛选
 df1<-df[select_gene, ]
-p1[i] <- df[df[[1]] == keygene, 2]
-
+p1[i] <- df[df[[1]] == keygene, 2]#只适合一个字符时
+select_df<-df[ df[ ,1] %in% select_gene3, ]#适合字符串
 for (n in 1:length(keygene)) {
   cat("Looking for", keygene[n], "\n")
   matches <- df[[1]] == keygene[n]
@@ -231,7 +231,7 @@ data$genes[1:10] <- gsub("/", ",", data$genes[1:10])
 
 # 6.操作行列
 
-gene_expression_data <- read.table("gene_expression_data.txt", header = TRUE)
+gene_expression_data <- read.table("gene_expression_data.txt",header=TRUE)
 # 提取列
 df<-DEG[,c(1,2,3)]
 # 删除列
@@ -300,7 +300,7 @@ cleaned_data <- data[complete.cases(data), ]
 # 移除含有NA值的行
 gene_map <- na.omit(gene_map)
 # 删除含有缺失值的行
-data <- na.omit(data)  
+geo_exp <- na.omit(geo_exp)  
 data <- data[complete.cases(data), ]
 #删除整行都是缺失值的行
 data <- data[rowSums(is.na(data)) != ncol(data), ]
@@ -316,6 +316,7 @@ data$column_name <- as.numeric(factor(data$column_name, levels = unique_values))
 # 从第一列提取基因名称
 genename=as.character(DEG[, 1])
 genename=as.character(DEG["TRAPPC1", 1])
+
 gene_map=bitr(genename,fromType="SYMBOL",toType="ENTREZID",OrgDb=org.Hs.eg.db)
 
 # # # # # 合并
@@ -325,7 +326,7 @@ gene_map=bitr(genename,fromType="SYMBOL",toType="ENTREZID",OrgDb=org.Hs.eg.db)
 gene_map <- inner_join(gene_map, DEG, by = "SYMBOL")
 # 在 clinical_data 中匹配病人ID，获取对应的临床信息（以y为主，可以理解为保留全部，不匹配的会自动填充，若x不够，会按照x的数量走。）
 process_TCGA_clinical <- merge(sample_names,  selected_columns, by.x = "patient", by.y = "Patient", all.x = TRUE)
-# 组合，要求数据框完全匹配，一般用不到
+# 组合，要求数据框完全匹配，一般用不到,配合交集使用gene<-intersect(rownames(rt1), rownames(rt2)) 
 expr_count = cbind(gene_type=data1$gene_type,gene_name=data1$gene_name,counts)
 
 # # # # # # #去重

@@ -26,12 +26,13 @@ print(projects)
 # 2.下载临床数据和表达数据（只需要更改project）
 #获取临床数据，新版用TCGA_pd <- GDCquery_clinic(project = "TCGA-COAD")，存在无效行
 #参考??GDCprepare_clinic
-project <- "TCGA-LUAD"
+project <- "TCGA-BRCA"
 query <- GDCquery(project = project,
                   data.category = "Clinical", 
                   data.type = "Clinical Supplement",
                   data.format ="bcr xml")
-GDCdownload(query)
+#有可能下载失败，换个时间点下载可以，或者官网下载
+GDCdownload(query, method = "api")
 #患者信息 (clinical.info = "patient")：如患者ID、年龄、性别、生存时间、肿瘤分期等。这些信息通常用于了解患者群体的特征，以及评估与生存率、治疗反应等相关的临床特征。
 #药物信息 (clinical.info = "drug"):如药物名称、给药剂量、给药时间、药物反应等。这些信息对于了解患者的治疗历史以及评估不同治疗方案的效果非常重要。
 #放射治疗信息 (clinical.info = "radiation")：如治疗剂量、治疗时间、治疗区域等。这些信息对于了解患者的治疗历史、评估放射治疗的效果以及预测患者的预后都非常重要。
@@ -40,7 +41,6 @@ pd <- GDCprepare_clinic(query, clinical.info = "patient")
 
 
 #获取表达数据
-project = "TCGA-LUAD"
 CANCER <- GDCquery(project = project, 
                  data.category = "Transcriptome Profiling", 
                  data.type = "Gene Expression Quantification", 
@@ -51,7 +51,7 @@ GDCdownload(query = CANCER, method = "api")
 expr <- GDCprepare(CANCER,save = T,save.filename = paste0(project,"_RNA.Rdata"))
 #.Counts = "unstranded" tpm = "tpm_unstrand" fpkm = " fpkm_unstrand"
 #TPM和FPKM没有考虑到高表达基因波动以及有效reads总数对基因表达量的影响。
-expr=data
+
 counts <- as.data.frame(assay(expr))#默认提取counts数据
 TPM <- as.data.frame(assay(expr,i = "tpm_unstrand"))#提取TPM数据
 data1=as.data.frame(rowRanges(expr))#获取其它信息数据#这里面就包括注释以及编码、非编码等等信息（包括标准化所需的基因长度等）

@@ -22,19 +22,26 @@ system('where make')
 #PACKAGE路径
 .libPaths()
 #程序运行路径
+
 getwd()
 setwd()
+
+# 获取当前代码文件的路径
+current_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+# 将工作路径设置为当前代码文件所在的路径
+setwd(current_dir)
+
 #加载包
 library(Rcpp)
 #查看占用
 search()
 #清除占用
-detach("package:Rcpp", unload = TRUE)
+detach("aPEAR", unload = TRUE)
 
 #清除缓存
 rm(ids_570)
 rm(list = ls())  # 删除所有对象
-remove.packages("Rcpp")
+remove.packages("aPEAR")
 
 #重新安装
 install.packages("languageserver", clean = TRUE, repos=NULL, type="source")
@@ -55,7 +62,7 @@ devtools::reload()
 ...............................................................
 #4 设置github
 #设置路径
-cd "C:/Users/21989/Documents/test.A"
+cd "D:/test.A"
 
 
 #设置账户
@@ -73,6 +80,14 @@ git push --set-upstream origin master
 git stash
 git pull origin main --allow-unrelated-histories
 git stash pop
+#解决上传内存过小
+git config --global http.postBuffer 524288000
+git remote set-url origin git@github.com:521LWS/test.A.git
+#密码19980505
+git remote add origin https://github.com/521LWS/test.A.git
+
+
+
 ....................................................................
 #help
 help(package=ggplot2)
@@ -140,6 +155,8 @@ names(y)<-x
 x[c(2:5)]<-c(2:5)#已改变x
 append(x=x,99,3)#未改变x，需赋值
 x
+drv != "4",表示不等于
+双等号 == 来进行相等性比较
 ............................................................
 数据处理分析
 #1.移除环境文件
@@ -147,21 +164,40 @@ rm(ids, ids_570, geo_pd, geo_exp, fit, fit2, df, data, merged_data,probe_annotat
 rm(list = ls())  #删除所有对象
 rm(net)
 # 2..载入
+# 将所有类型的 NA（包括 NA、NaN 等）都替换为空格或数字
+data <- read.csv("your_data.csv", na.strings = c("NA", "NaN", " ", ""))
+geneTraitSignificance[is.na(geneTraitSignificance)] <- 0
+
 load("TCGA-COAD_RNA.Rdata")
 #使用read.csv()函数载入CSV文件
 data <- read.csv("your_file.csv", header = TRUE)
 # 读取以制表符分隔的文本文件
-data <- read.delim("file.txt", header = TRUE)
+data <- read.delim("GPL19057.soft.gz", header = TRUE)
 # 以TXT格式读取基因表达数据
-data <- read.table(file_path, header = TRUE, sep = "\t")
+data <- read.table("GSE47529_series_matrix.txt", header = TRUE, sep = "\t")
 # 运行已储存模块
 source("data_cleaning.R")
-
+GDSC2_Res <- exp(GDSC2_Res)  #下载的数据是被log转换过的，逆转回去
 
 
 # 4. 查找(切记先进行WGCNA_matrix<-as.data.frame(WGCNA_matrix))
 # 筛选
 df1<-df[select_gene, ]
+p1[i] <- df[df[[1]] == keygene, 2]#只适合一个字符时
+select_df<-df[ df[ ,1] %in% select_gene3, ]#适合字符串
+for (n in 1:length(keygene)) {
+  cat("Looking for", keygene[n], "\n")
+  matches <- df[[1]] == keygene[n]
+  if (any(matches)) {
+    p1[n+1, i] <- df[matches, 2]
+    cat("Found:", df[matches, 2], "\n")
+  } else {
+    cat("No match found for", keygene[n], "\n")
+  }
+}
+
+
+
 # 筛选
 protein_coding_rows <- data[data$type == "protein-coding", ]
 ##转置
@@ -171,7 +207,9 @@ selected_columns <- WGCNA_matrix[, grepl("LEP", names(WGCNA_matrix), ignore.case
 keyword <- c("Patient_ID", "Age", "Sex", "gender","Disease_Status","diagno")
 selected_columns <- clinical_data[, grepl(paste(keyword, collapse = "|"), names(clinical_data), ignore.case = TRUE)]
 # 将疾病状态转换为数值标量（包含Healthy或者是无效值,ignore.case = TRUE忽略关键词大小写）
-selected_columns$Disease_Status <- ifelse(grepl("Healthy", selected_columns$Disease_Status, ignore.case = TRUE) | is.na(selected_columns$Disease_Status), 0, 1)
+
+
+selected_columns$Disease_Status <- ifelse(grepl("Healthy", selected_columns$Disease_Status, ignore.case = TRUE) | is.na(selected_columns$Disease_Status)|is.nan(selected_columns$Disease_Status), 0, 1)
 # 对比两列数据异同
 diff_data <- query$submitter_id[!(query$submitter_id %in% clinical$bcr_patient_barcode)]
 #找到某一列的某个数值所在的一行
@@ -193,7 +231,7 @@ data$genes[1:10] <- gsub("/", ",", data$genes[1:10])
 
 # 6.操作行列
 
-gene_expression_data <- read.table("gene_expression_data.txt", header = TRUE)
+gene_expression_data <- read.table("gene_expression_data.txt",header=TRUE)
 # 提取列
 df<-DEG[,c(1,2,3)]
 # 删除列
@@ -216,6 +254,23 @@ tableB <- tableB[c(2, 1), ]
 row_indices <- match(rownames(tableB), rownames(tableA))
 # 根据表B的行索引对表A的行进行排序
 tableA_sorted <- tableA[row_indices, ]
+#实例
+colname1=c("bcr_patient_barcode","time","event","gender","age_at_initial_pathologic_diagnosis","histological_type","stage_event_pathologic_stage","T","N","M", "person_neoplasm_cancer_status","relative_family_cancer_history","history_hepato_carcinoma_risk_factors")
+# 包含关键词的列名
+selected_columns <-  selected_columns[, grep(paste(colname1, collapse = "|"), names(selected_columns))]
+# 按照指定顺序排序
+selected_columns <- selected_columns[ ,order(match(colnames(selected_columns),colname1))]
+
+
+
+
+
+
+
+
+
+
+
 # 根据表B的行索引对表A的行进列排序
 processed_geo <- geo_data[, row_indices]
 # 将 blockgenes 数据框的第一列的数值作为索引
@@ -225,13 +280,31 @@ vecto <- blockgenes[[1]]
 dendro$labels <- color[vecto, 1]
 a<-DEG[1, 1]
 
+
+
+
 # 7. 处理数据
+
+#将空格换为无效值（对整个列表进行数据类型变换）
+library (dplyr)
+data <- mutate_all(data, as.character)
+data<- data %>% mutate_all (na_if,"")
+
+#对列命名
+names(Disease_stage) <- "Disease_stage"
 #重命名
 colnames(Go1)<-c("a", "b")
-#使用subset函数删除包含空格的行
-cleaned_data <- subset(data, !grepl("\\s", rownames(data)))
+#删除包含空格的行
+cleaned_data <- data[complete.cases(data), ]
+
 # 移除含有NA值的行
 gene_map <- na.omit(gene_map)
+# 删除含有缺失值的行
+geo_exp <- na.omit(geo_exp)  
+data <- data[complete.cases(data), ]
+#删除整行都是缺失值的行
+data <- data[rowSums(is.na(data)) != ncol(data), ]
+
 # 假设 data 是包含数据的数据框，且包含一列名为column_name的字符列
 # 获取列中的所有字符，并去重
 unique_values <- unique(data$column_name)
@@ -243,6 +316,7 @@ data$column_name <- as.numeric(factor(data$column_name, levels = unique_values))
 # 从第一列提取基因名称
 genename=as.character(DEG[, 1])
 genename=as.character(DEG["TRAPPC1", 1])
+
 gene_map=bitr(genename,fromType="SYMBOL",toType="ENTREZID",OrgDb=org.Hs.eg.db)
 
 # # # # # 合并
@@ -252,7 +326,7 @@ gene_map=bitr(genename,fromType="SYMBOL",toType="ENTREZID",OrgDb=org.Hs.eg.db)
 gene_map <- inner_join(gene_map, DEG, by = "SYMBOL")
 # 在 clinical_data 中匹配病人ID，获取对应的临床信息（以y为主，可以理解为保留全部，不匹配的会自动填充，若x不够，会按照x的数量走。）
 process_TCGA_clinical <- merge(sample_names,  selected_columns, by.x = "patient", by.y = "Patient", all.x = TRUE)
-# 组合，要求数据框完全匹配，一般用不到
+# 组合，要求数据框完全匹配，一般用不到,配合交集使用gene<-intersect(rownames(rt1), rownames(rt2)) 
 expr_count = cbind(gene_type=data1$gene_type,gene_name=data1$gene_name,counts)
 
 # # # # # # #去重
@@ -274,8 +348,13 @@ sorted_df <- df[order(abs(df$FC)), ]
 #降序排序，可以使用 rev() 函数来反转排序的索引：
 sorted_df <- df[rev(order(abs(df$FC))), ]
 
-
-
+#取交集
+# 取字符向量的交集（只能两两处理）
+a=unlist(`TCGA-LIHC148df`[1]) 
+intersection <- intersect(intersect(a, b), c)
+intersect(a, b)
+# 取字符向量的合集
+union_set <- union(union(vector1, vector2), vector3)
 
 
 
@@ -288,6 +367,50 @@ lfc$y[lfc$x < 0] <- 0
 将数据从宽格式转换为长格式，然后将行名和原来的列名作为新的列
 exp1<-tibble::rownames_to_column(exp1, var = "Gene")
 exp2 <-pivot_longer(exp1,-Gene)
+
+# 将数据从宽格式转换为长格式，以便绘制箱线图
+library(tidyr)
+re_long <- pivot_longer(re_df, cols = -Group, names_to = "Cell", values_to = "Value")
+library(tidyr)
+re_wide <- pivot_wider(re_long, names_from = CELL_LINE_NAME, values_from = LN_IC50)
+
+
+
+#这将确保在接下来的随机过程中，例如随机数生成或数据重排等，都会得到相同的结果，因为它们都使用了相同的种子。
+set.seed(42)
+
+
+
+
+
+
+#相关性分析方式1
+library(WGCNA)
+# 获取表B的行索引
+row_indices <- match(rownames(datExpr), rownames(pd))
+# 根据表B的行索引对表A的行进行排序
+processed2_pd <-pd[row_indices, ]
+# 计算基因特征相关性
+geneTraitSignificance <- as.data.frame(cor(datExpr, processed2_pd, use = "p"))
+# 计算基因特征相关性的 p 值
+p <- as.data.frame(corPvalueStudent(as.matrix(geneTraitSignificance), nrow(processed2_pd)))
+
+
+
+
+#相关性分析方式2#太慢，不用这个
+# 获取表B的行索引
+row_indices <- match(rownames(datExpr), rownames(pd))
+# 根据表B的行索引对表A的行进行排序
+library(Hmisc)
+processed2_pd <-pd[row_indices, ]
+nc <-cbind(datExpr,processed2_pd)
+nc<-as.matrix(nc)
+m <- rcorr(nc)$r[1:ncol(datExpr),(ncol(nc)-ncol(processed2_pd)+1):ncol(nc)]
+p<-rcorr(nc)$P[1:ncol(datExpr),(ncol(nc)-ncol(processed2_pd)+1):ncol(nc)]
+
+
+
 
 
 
@@ -336,7 +459,7 @@ ids <- as.data.frame(ids_570$symbol)
 # 并且进行数学运算、索引、切片、循环迭代等操作时，向量是一个非常有用的数据结构。
 ids_v2 <- ids_570$symbol
 
-#正则替换，*+？{2,6}指数量，[a-z][az]列举字符，^指开头$结尾，\b设置边界，\dD数字\wW字母\sS其他键盘符,R中似乎用双杠
+#正则替换查找，*+？{2,6}指数量，[a-z][az]列举字符，^指开头$结尾，\b设置边界，\dD数字\wW字母\sS其他键盘符,R中似乎用双杠
 #.换行符外的任意字符，   |或，与小括号搭配，<.+> <.+?>判断括号时的长匹配与短匹配，少用
 #（）用来分隔为不同部分并从左到右编号，"\\1_\\1_"将编号重组并添加需要的连接符，
 gsub("([ab])", "\\1_\\1_", "abc and ABC")
@@ -345,6 +468,18 @@ gsub("([ab])", "\\1_\\1_", "abc and ABC")
 a <- gsub(".*\\((.*)\\).tif", "\\1", "001-001-blue(300ms).tif")
 #编辑分组文字
 group <- ifelse(str_detect(geo$pd$title, "ost"), "ost", "con")
+
+#ifelse用于嵌套判断不同列时很容易出问题case_when 函数更容易理解和维护，因为它允许您按顺序指定条件，并且更具可读性。请尝试这些步骤并检查结果
+library(dplyr)
+selected_columns$event <- case_when(
+  stringr::str_detect(selected_columns$days_to_death, "\\d") ~ 1,
+  stringr::str_detect(selected_columns$vital_status, "Dead") ~ 1,
+  stringr::str_detect(selected_columns$vital_status, "Alive") ~ 0,
+  TRUE ~ NA_real_
+)
+
+
+
 # 三种文字编辑方式根据需要选择，其实不如上面的判断句来的好用
 group_list$group <- stringr::str_remove(group_list$group, "hMSC")
 group_list$group <- str_replace(group_list$group, ".*-(.*?)_.*", "\\1")

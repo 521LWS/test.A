@@ -37,9 +37,28 @@ for (i in 1:n) {
 cat.col=c('#B3EAFF','#B2B2FE',"#FEB2B3","#C6EBB3", "#B4FFD9")
 
 
+
+library(scales)
+# 获取默认调色板中的颜色(小提琴图中的配色)
+default_colors <- hue_pal()(20)
+# 打印颜色的文字描述
+default_colors
+ "#EA8331" ,"#00C1A3" , "#9590FF",  "#FF62BC" 
+
+
+
+
+
+
+
+
 # 透明度可以改变两个渐变色的对比度一个0.9，一个0.
 scale_fill_manual(values = c("#EDB749","#3CB2EC","#9C8D58"))
 c("palevioletred", "peachpuff", "lightgreen","lightblue", "plum")
+
+mycolor <- c("#FF9999","#99CC00","#FF9900","#FF99CC","#99CC60","#c77cff")
+
+
 values = c("turquoise", "salmon", "mediumpurple1"
 mypalette=c(rgb(1, 0, 0, 0.9), rgb(1, 1, 1, 0))
 mypalette <- colorRampPalette(c("red","white", "blue"))(9)
